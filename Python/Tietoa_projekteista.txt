@@ -16,7 +16,8 @@ Alcoholic spider:
    tuotedatan ja laskee kaikista alkoholi tuotteista niiden alkoholi % per litra per euro arvon,kyseisestä
    ohjelmasta saa selville Alkon parhaan hinta per alkoholi juoman
 
-   ohjelma joutuu käymään läpi paljon html koodia, joten sen ajaminen ja RAM:iin lataaminen saattaa olla hieman    hidasta
+   ohjelma joutuu käymään läpi paljon html koodia, joten sen ajaminen ja RAM:iin lataaminen saattaa olla hieman
+   hidasta
 
 Minesweeper:
 
