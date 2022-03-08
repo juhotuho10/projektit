@@ -1,15 +1,6 @@
 """
-COMP.CS.100 Ohjelmointi 1 / Programming 1
-Student Id: 50234460
-Name:       Juho Naatula
-Email:      juho.naatula@tuni.fi
-
 A minesweeper game
-I aim to have this program be evaluated in the advanced category,
-since I spent a lot of time on this and I believe that it qualifies as such
 
-I suspect you already know the rules but just in case you can read them below,
-also it's mandatory to have a written guide for the program.
 
 Guide:
 First the game opens up the configuration menu where you enter the minefield's
