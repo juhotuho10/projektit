@@ -4,7 +4,7 @@ Lotto simulaattori:
    Ensimmäisiä projekteja minkä tein
    Suoritin tällä projektilla lukion tietotekniikan kurssin
 
-   Projekti on lottosimulaattori, jossa on käyttölittymä
+   Projekti on lottosimulaattori, jossa on käyttöliittymä
    Voit kokeilla kuinka monta vuotta kestää, että voitat lotossa
    (ps. aika monta)
 
@@ -27,3 +27,4 @@ Data Analysis - Pandas
   
   Esimerkkejä Pandas opettelusta jonka tein pari vuotta sitten
   HUOM. koodi ei ole minun omaani, näytän vain asioita joita olen käynyt läpi
+  jos kiinntostaa käyttää ohjelmia, niin data path täytyy kirjoittaa oikeaksi omalle tietokoneelle
