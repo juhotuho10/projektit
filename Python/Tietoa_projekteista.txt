@@ -1,6 +1,27 @@
 Lotto simulaattori:
 
-Tehty 2019 Tammikuussa, Ensimmäisiä projekteja minkä tein
-Suoritin tällä projektilla lukion tietotekniikan kurssin
+   Tehty 2019 Tammikuussa
+   Ensimmäisiä projekteja minkä tein
+   Suoritin tällä projektilla lukion tietotekniikan kurssin
+
+   Projekti on lottosimulaattori, jossa on käyttölittymä
+   Voit kokeilla kuinka monta vuotta kestää, että voitat lotossa
+   (ps. aika monta)
 
 
+Alcoholic spider:
+
+   Tehty 2021 syyskuussa
+   Hauska kaverin ehdottama webcrawler joka hakee Alkon sivun html koodin ja etsii siitä kaikkien tuotteiden    tuotedatan ja laskee kaikista alkoholi tuotteista niiden alkoholi % per litra per euro arvon, kyseisestä       ohjelmasta saa selville Alkon parhaan hinta per alkoholi juoman
+
+   ohjelma joutuu käymään läpi paljon html koodia, joten sen ajaminen ja ramiin lataaminen saattaa olla hieman    hidasta
+
+Minesweeper:
+
+   Tehty 2021 marraskuussa, Yliopisto ohjelmonti 1 lopullinen projekti työ, yksin tehty
+   Yksinkertainen miinaharava peli
+
+Data Analysis - Pandas
+  
+  Esimerkkejä Pandas opettelusta jonka tein pari vuotta sitte
+  HUOM. koodi ei ole minun omaani, näytän vain asioita joita olen käynyt läpi
