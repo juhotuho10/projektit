@@ -12,9 +12,11 @@ Lotto simulaattori:
 Alcoholic spider:
 
    Tehty 2021 syyskuussa
-   Hauska kaverin ehdottama webcrawler joka hakee Alkon sivun html koodin ja etsii siitä kaikkien tuotteiden       tuotedatan ja laskee kaikista alkoholi tuotteista niiden alkoholi % per litra per euro arvon, kyseisestä          ohjelmasta saa selville Alkon parhaan hinta per alkoholi juoman
+   Hauska kaverin ehdottama webcrawler joka hakee Alkon sivun html koodin ja etsii siitä kaikkien tuotteiden
+   tuotedatan ja laskee kaikista alkoholi tuotteista niiden alkoholi % per litra per euro arvon,kyseisestä
+   ohjelmasta saa selville Alkon parhaan hinta per alkoholi juoman
 
-   ohjelma joutuu käymään läpi paljon html koodia, joten sen ajaminen ja RAM:iin lataaminen saattaa olla hieman       hidasta
+   ohjelma joutuu käymään läpi paljon html koodia, joten sen ajaminen ja RAM:iin lataaminen saattaa olla hieman    hidasta
 
 Minesweeper:
 
