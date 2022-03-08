@@ -20,7 +20,7 @@ Alcoholic spider:
 
 Minesweeper:
 
-   Tehty 2021 marraskuussa, Yliopisto ohjelmonti 1 lopullinen projekti työ, yksin tehty
+   Tehty 2021 marraskuussa, Yliopisto ohjelmointi 1 lopullinen projekti työ, yksin tehty
    Yksinkertainen miinaharava peli
 
 Data Analysis - Pandas
