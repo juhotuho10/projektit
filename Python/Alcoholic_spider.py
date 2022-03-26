@@ -2,6 +2,18 @@ from bs4 import BeautifulSoup
 import requests
 import re
 from math import *
+import time
+
+
+# a decorator function that times how long it took for the function to complete
+def timing(f):
+    def wrap(*args, **kw):
+        time_start = time.time()
+        result = f(*args, **kw)
+        time_end = time.time()
+        print(f"func: {f.__name__} took: {time_end - time_start:.3f} sec")
+        return result
+    return wrap
 
 
 def get_html_from_url(url):
@@ -11,6 +23,8 @@ def get_html_from_url(url):
 
 
 # hakee kokonais sivumäärän ja etsii oikean sivun
+
+@timing
 def get_correct_url() -> str:
     url = "https://www.alko.fi/tuotteet/tuotelistaus?SearchTerm=*&PageSize=12&SortingAttribute=&PageNumber=1&SearchParameter=%26%40QueryTerm%3D*%26ContextCategoryUUID%3D6Q7AqG5uhTIAAAFVOmkI2BYA%26OnlineFlag%3D1"
     doc = get_html_from_url(url)
@@ -37,7 +51,7 @@ def get_correct_url() -> str:
 
     return url
 
-
+@timing
 def get_data_from_html(doc):
     prices = doc.find_all(class_="product-data-container")
     price_data = doc.find_all(class_="js-price-container price-wrapper mc-price hide-for-list-view")
@@ -67,7 +81,7 @@ def split_items(list):
 
     return items
 
-
+@timing
 def make_dict_from_data(product_data, product_price):
     alcohol_dict = {}
 
