@@ -43,6 +43,6 @@ ML-snake:
    suhteellisen yksinkertaiset ja toimivat näkösignaalit ja rewardit, mutta niiden yksinkertaistaminen vaati paljon pohtimista ja yrityksiä
    huom. alkuperäinen snake peli ei ole itse tehtyä, mutta ei siitä ole kauhesti ML muutoksen jälkeen jäljelläkään, muuta kuin renderointi
 
-   mukana tulleen mallin voi ajaa snek_game_loading.py ja nähdä sen toimintaa, kunhan RENDER = True
+   mukana tulleen mallin voi ajaa snek_game_loading.py ja nähdä sen toimintaa
    kaikki muu on jo ennestään hoidettua eikä mitään tarvtse muuttaa
    
