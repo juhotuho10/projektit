@@ -16,15 +16,33 @@ Alcoholic spider:
    tuotedatan ja laskee kaikista alkoholi tuotteista niiden alkoholi % per litra per euro arvon,kyseisestä
    ohjelmasta saa selville Alkon parhaan hinta per alkoholi juoman
 
-   ohjelma joutuu käymään läpi paljon html koodia, joten sen ajaminen ja RAM:iin lataaminen saattaa olla hieman hidasta
+   ohjelma joutuu käymään läpi paljon html koodia, joten sen ajaminen ja RAM:iin lataaminen saattaa olla hieman hidasta, ajamisessa saattaa mennä n. 10-20 min
 
 Minesweeper:
 
    Tehty 2021 marraskuussa, Yliopisto ohjelmointi 1 lopullinen projekti työ, yksin tehty
    Yksinkertainen miinaharava peli
 
-Data Analysis - Pandas
-  
-  Esimerkkejä Pandas opettelusta jonka tein pari vuotta sitten
-  HUOM. koodi ei ole minun omaani, näytän vain asioita joita olen käynyt läpi
-  jos kiinntostaa käyttää ohjelmia, niin data path täytyy kirjoittaa oikeaksi omalle tietokoneelle
+ML-snake:
+   
+   Tehty 2022 elokuussa, snake peli muunneltu ML-algorytmillä ajettavaksi, custom reward funktio ja näkö suunniteltu iteroimalla muutoksia. Uusi luokka on aina inheritoinut vanhan ja     rakentanut siihen päälle, joten kaikista uusin iteraatio on alimpana (SnekEnv12)
+
+   snake näkösignaalit ovat yksinkertaistettuna: 
+   omenan positio päähän verrattuna: X ja Y [-1,0,1] (ei kerro etäisyyttä, vain suunnan)
+   snake keskimmäisen palikan positio päähän verrattuna: X ja Y [-1,0,1]
+   snake hännän palikan positio päähän verrattuna: X ja Y [-1,0,1]
+   kuinka lähellä "vaara palikka" ( kehon osa tai reuna ) on kullakin kulkusuunnalla
+
+   reward yksinkertaistettuna:
+   *liikkuu lähemmäs omenaa + 
+   *liikkuu kauvemmas omenasta - (enemmän miinusta kuin lähemmäs mentäessä saa plussaa ettei snake vain pyöri ympyrää)
+   *mitä kauenpana snake on "vaara palikoista" sitä enemmän + tai jos tarpeeksi lähellä vaarapalikkaa niin -
+   *omenaan osuu +
+   *kuolee - 
+
+   suhteellisen yksinkertaiset ja toimivat näkösignaalit ja rewardit, mutta niiden yksinkertaistaminen vaati paljon pohtimista ja yrityksiä
+   huom. alkuperäinen snake peli ei ole itse tehtyä, mutta ei siitä ole kauhesti ML muutoksen jälkeen jäljelläkään, muuta kuin renderointi
+
+   mukana tulleen mallin voi ajaa snek_game_loading.py ja nähdä sen toimintaa, kunhan RENDER = True
+   kaikki muu on jo ennestään hoidettua eikä mitään tarvtse muuttaa
+   
