@@ -19,7 +19,7 @@ version = 12
 env = SnekEnv12()
 env.reset()
 
-model_folder = "PPO-1674319025"
+model_folder = "PPO-1674390088"
 
 model_path = f"logs/snek-{version}/{model_folder}/best_model.zip"
 

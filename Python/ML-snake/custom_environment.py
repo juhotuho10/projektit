@@ -1392,7 +1392,7 @@ class SnekEnv12(SnekEnv11):
 
         self.previous_distance = self.distance
 
-        self.reward += (self.left + self.right + self.up + self.down - 9) / 10
+        self.reward += (self.left + self.right + self.up + self.down - 9) / 2
 
         if self.reward < 0:
             self.reward *= 1.1

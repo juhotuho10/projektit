@@ -34,15 +34,18 @@ ML-snake:
    kuinka lähellä "vaara palikka" ( kehon osa tai reuna ) on kullakin kulkusuunnalla
 
    reward yksinkertaistettuna:
-   *liikkuu lähemmäs omenaa + 
-   *liikkuu kauvemmas omenasta - (enemmän miinusta kuin lähemmäs mentäessä saa plussaa ettei snake vain pyöri ympyrää)
-   *mitä kauenpana snake on "vaara palikoista" sitä enemmän + tai jos tarpeeksi lähellä vaarapalikkaa niin -
-   *omenaan osuu +
-   *kuolee - 
+   *liikkuu lähemmäs omenaa (+) 
+   *liikkuu kauvemmas omenasta (-) (enemmän miinusta kuin lähemmäs mentäessä saa plussaa ettei snake vain pyöri ympyrää)
+   *mitä kauenpana snake on "vaara palikoista" sitä enemmän (+) tai jos tarpeeksi lähellä vaarapalikkaa niin (-) (näin snake mielummin välttelee vaaraa, sen sijaan, että ottaisi vain lyhimmän reitin omenalle)
+   *omenaan osuu (+)
+   *kuolee (-) 
 
    suhteellisen yksinkertaiset ja toimivat näkösignaalit ja rewardit, mutta niiden yksinkertaistaminen vaati paljon pohtimista ja yrityksiä
    huom. alkuperäinen snake peli ei ole itse tehtyä, mutta ei siitä ole kauhesti ML muutoksen jälkeen jäljelläkään, muuta kuin renderointi
 
    mukana tulleen mallin voi ajaa snek_game_loading.py ja nähdä sen toimintaa
    kaikki muu on jo ennestään hoidettua eikä mitään tarvtse muuttaa
+   voit asettaa RENDER = False, niin peli ajaa nopeasti 100 kierrosta loppuun, mutta näet vain konsoliin tulostetun loppupituuden jokaisen kuoleman jälkeen
+
+   paras pituus joka tuli vastaan oli 174
    
