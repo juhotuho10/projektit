@@ -48,4 +48,3 @@ ML-snake:
    voit asettaa RENDER = False, niin peli ajaa nopeasti 100 kierrosta loppuun, mutta näet vain konsoliin tulostetun loppupituuden jokaisen kuoleman jälkeen
 
    paras pituus joka tuli vastaan oli 174
-   
