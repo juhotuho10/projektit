@@ -40,10 +40,10 @@ ML-snake:
    *omenaan osuu (+)
    *kuolee (-) 
 
-   suhteellisen yksinkertaiset ja toimivat näkösignaalit ja rewardit, mutta niiden yksinkertaistaminen vaati paljon pohtimista ja yrityksiä
-   huom. alkuperäinen snake peli ei ole itse tehtyä, mutta ei siitä ole kauhesti ML muutoksen jälkeen jäljelläkään, muuta kuin renderointi
+   suhteellisen yksinkertaiset ja toimivat näkösignaalit ja rewardit, mutta niiden yksinkertaistaminen vaati paljon pohtimista, teoriaa ja yrityksiä
+   huom. alkuperäinen snake peli ei ole itse tehtyä, mutta ei siitä ole kauhesti ML muutoksen jälkeen jäljelläkään, muuta kuin renderointi (löytyy tiedostosta original_snake_game.py jos    kiinnostaa katsoa)
 
-   mukana tulleen mallin voi ajaa snek_game_loading.py ja nähdä sen toimintaa
+   mukana tulleen valmiksi treenatun mallin voi ajaa snek_game_loading.py ja nähdä sen toimintaa
    kaikki muu on jo ennestään hoidettua eikä mitään tarvtse muuttaa
    voit asettaa RENDER = False, niin peli ajaa nopeasti 100 kierrosta loppuun, mutta näet vain konsoliin tulostetun loppupituuden jokaisen kuoleman jälkeen
 
