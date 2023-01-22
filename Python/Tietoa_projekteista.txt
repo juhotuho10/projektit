@@ -25,7 +25,7 @@ Minesweeper:
 
 ML-snake:
    
-   Tehty 2022 elokuussa, snake peli muunneltu ML-algorytmillä ajettavaksi, custom reward funktio ja näkö suunniteltu iteroimalla muutoksia. Uusi luokka on aina inheritoinut vanhan ja     rakentanut siihen päälle, joten kaikista uusin iteraatio on alimpana (SnekEnv12)
+   Tehty 2022 elokuussa, snake peli muunneltu ML-algorytmillä ajettavaksi, custom reward funktio ja näkö suunniteltu iteroimalla muutoksia. Uusi luokka on aina inheritoinut vanhan ja    rakentanut siihen päälle, joten kaikista uusin iteraatio on alimpana (SnekEnv12)
 
    snake näkösignaalit ovat yksinkertaistettuna: 
    omenan positio päähän verrattuna: X ja Y [-1,0,1] (ei kerro etäisyyttä, vain suunnan)
@@ -41,7 +41,8 @@ ML-snake:
    *kuolee (-) 
 
    suhteellisen yksinkertaiset ja toimivat näkösignaalit ja rewardit, mutta niiden yksinkertaistaminen vaati paljon pohtimista, teoriaa ja yrityksiä
-   huom. alkuperäinen snake peli ei ole itse tehtyä, mutta ei siitä ole kauhesti ML muutoksen jälkeen jäljelläkään, muuta kuin renderointi (löytyy tiedostosta original_snake_game.py jos    kiinnostaa katsoa)
+   huom. alkuperäinen snake peli ei ole itse tehtyä, mutta ei siitä ole kauhesti ML muutoksen jälkeen jäljelläkään, muuta kuin renderointi (löytyy tiedostosta original_snake_game.py jos
+   kiinnostaa katsoa tai jos haluaa yrittää pelata paremmin kuin ML algorytmi)
 
    mukana tulleen valmiksi treenatun mallin voi ajaa snek_game_loading.py ja nähdä sen toimintaa
    kaikki muu on jo ennestään hoidettua eikä mitään tarvtse muuttaa
