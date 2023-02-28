@@ -53,4 +53,4 @@ while done_count <= 100:
 
 print(f"avg: {sum(snake_lengths) / len(snake_lengths)}")
 print(f"all lengths:{sorted(snake_lengths)}")
-print(f"longest snake: {sorted(snake_lengths)[-1]}")
+print(f"longest snake: {max(snake_lengths)}")

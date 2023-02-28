@@ -51,6 +51,6 @@ ML-snake:
    paras pituus joka tuli vastaan oli 174
 
 
-Linkki Kaggle profiilin data-analyysi töihin:
+Linkki Kaggle profiilin data-analyysi / ML prediktio työhön:
    https://www.kaggle.com/code/juhotuho10/titanic-spaceship
 
