@@ -1,6 +1,6 @@
 
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 import numpy as np
 import cv2
 import random
@@ -14,14 +14,19 @@ SNAKE_LEN_GOAL = 35
 N_CHANNELS = 12 + SNAKE_LEN_GOAL
 
 
-def collision_with_apple(apple_position, score):
-    apple_position = [random.randrange(1, 50) * 10, random.randrange(1, 50) * 10]
-    score += 1
-    return apple_position, score
+def collision_with_apple(apple_position, score, snake_pos):
+    while True:
+        apple_position = [random.randrange(1, 50) * 10, random.randrange(1, 50) * 10]
+        if apple_position not in snake_pos:
+            score += 1
+            return apple_position, score
+    
 
 
 def collision_with_boundaries(snake_head):
-    if snake_head[0] >= 500 or snake_head[0] < 0 or snake_head[1] >= 500 or snake_head[1] < 0:
+    head_x = snake_head[0]
+    head_y = snake_head[1]
+    if head_x >= 500 or head_x < 0 or head_y >= 500 or head_y < 0:
         return 1
     else:
         return 0
@@ -173,6 +178,7 @@ class SnekEnv2(gym.Env):
         # a-Left, d-Right, w-Up, s-Down
 
         # Change the head position based on the button direction
+
         if action == 1:
             self.snake_head[0] += 10
         elif action == 0:
@@ -185,7 +191,7 @@ class SnekEnv2(gym.Env):
         # Increase Snake length on eating apple
         if self.snake_head == self.apple_position:
             self.apple_hit = True
-            self.apple_position, self.score = collision_with_apple(self.apple_position, self.score)
+            self.apple_position, self.score = collision_with_apple(self.apple_position, self.score, self.snake_position)
             self.snake_position.insert(0, list(self.snake_head))
 
         else:
@@ -228,10 +234,12 @@ class SnekEnv2(gym.Env):
 
         info = self.get_info()
 
-        '''---------------------------RETURN-------------------------------'''
-        return self.observation, self.reward, self.done, info
+        truncated = False
 
-    def reset(self):
+        '''---------------------------RETURN-------------------------------'''
+        return self.observation, self.reward, self.done, truncated, info
+
+    def reset(self, seed = None):
         self.done = False
 
         self.img = np.zeros((500, 500, 3), dtype='uint8')
@@ -253,7 +261,7 @@ class SnekEnv2(gym.Env):
 
         self.all_observations(reset=True)
 
-        return self.observation  # reward, done, info can't be included
+        return self.observation, False # reward, done, info can't be included
 
     def render(self, mode='robot'):
 
@@ -270,8 +278,10 @@ class SnekEnv2(gym.Env):
 
         if mode == "human":
             speed = 0.005
-        else:
+        elif mode == "robot":
             speed = 0.001
+        else:
+            speed = 0.0002
 
         # Takes step after fixed time
         t_end = time.time() + speed
@@ -553,7 +563,7 @@ class SnekEnv5(SnekEnv4):
     def __init__(self):
         super().__init__()
 
-        self.observation_space = spaces.Box(low=-25, high=200,  # maximum possible values
+        self.observation_space = spaces.Box(low=-500, high=500,  # maximum possible values
                                             # shape = observations length
                                             shape=(20 + self.SNAKE_LEN_GOAL,),
                                             dtype=np.float32)  # HEIGHT, WIDTH for N_CHANNELS
@@ -714,7 +724,7 @@ class SnekEnv6(SnekEnv5):
         super().__init__()
         self.SNAKE_LEN_GOAL = 50
 
-        self.observation_space = spaces.Box(low=-25, high=200,  # maximum possible values
+        self.observation_space = spaces.Box(low=-500, high=500,  # maximum possible values
                                             # shape = observations length
                                             shape=(10 + self.SNAKE_LEN_GOAL,),
                                             dtype=np.float32)  # HEIGHT, WIDTH for N_CHANNELS
@@ -876,7 +886,7 @@ class SnekEnv7(SnekEnv6):
     def __init__(self):
         super().__init__()
         self.SNAKE_LEN_GOAL = 60
-        self.observation_space = spaces.Box(low=-25, high=200,  # maximum possible values
+        self.observation_space = spaces.Box(low=-500, high=500,  # maximum possible values
                                             # shape = observations length
                                             shape=(10 + self.SNAKE_LEN_GOAL,),
                                             dtype=np.float32)  # HEIGHT, WIDTH for N_CHANNELS
@@ -923,7 +933,7 @@ class SnekEnv8(SnekEnv7):
     def __init__(self):
         super().__init__()
 
-        self.observation_space = spaces.Box(low=-25, high=200,  # maximum possible values
+        self.observation_space = spaces.Box(low=-500, high=500,  # maximum possible values
                                             # shape = observations length
                                             shape=(8,), dtype=np.float32)  # HEIGHT, WIDTH for N_CHANNELS
 
@@ -1124,7 +1134,7 @@ class SnekEnv10(SnekEnv9):
     def __init__(self):
         super().__init__()
 
-        self.observation_space = spaces.Box(low=-25, high=200,  # maximum possible values
+        self.observation_space = spaces.Box(low=-500, high=500,  # maximum possible values
                                             # shape = observations length
                                             shape=(10,), dtype=np.float32)  # HEIGHT, WIDTH for N_CHANNELS
 
@@ -1268,9 +1278,9 @@ class SnekEnv11(SnekEnv10):
     def __init__(self):
         super().__init__()
 
-        self.observation_space = spaces.Box(low=-25, high=200,  # maximum possible values
+        self.observation_space = spaces.Box(low=-500, high=500,  # maximum possible values
                                             # shape = observations length
-                                            shape=(10,), dtype=np.int8)  # HEIGHT, WIDTH for N_CHANNELS
+                                            shape=(10,), dtype=np.int32)  # HEIGHT, WIDTH for N_CHANNELS
 
     def all_observations(self, reset):
         self.apple_hit = False
@@ -1424,7 +1434,7 @@ class CustomEnv(gym.Env):
         # Example when using discrete actions:
         self.action_space = spaces.Discrete(N_DISCRETE_ACTIONS)
         # Example for using image as input (channel-first; channel-last also works):
-        observation_space = spaces.Box(low=0, high=255,
+        observation_space = spaces.Box(low=-500, high=500,
                                             shape=(N_CHANNELS, HEIGHT, WIDTH), dtype=np.uint8)
 
     def step(self, action):

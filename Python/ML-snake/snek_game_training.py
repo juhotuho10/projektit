@@ -1,5 +1,5 @@
 import numpy as np
-import gym
+import gymnasium as gym
 import stable_baselines3
 import cv2
 import os
@@ -8,7 +8,6 @@ import time
 from stable_baselines3 import PPO
 from custom_environment import SnekEnv12
 
-from stable_baselines3 import TD3
 from stable_baselines3.common import results_plotter
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.results_plotter import load_results, ts2xy, plot_results
@@ -87,3 +86,4 @@ while True:
     model.learn(total_timesteps=TIMESTEPS, reset_num_timesteps=False, tb_log_name=train_model, callback=callback)
 
 
+ 

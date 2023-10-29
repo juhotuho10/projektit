@@ -1,11 +1,10 @@
 import numpy as np
-import gym
+import gymnasium as gym
 import stable_baselines3
 import os
 import time
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
-
 
 # HUOM. train mallin ja load mallin täytyy olla samat
 from custom_environment import SnekEnv12
@@ -19,14 +18,14 @@ version = 12
 env = SnekEnv12()
 env.reset()
 
-model_folder = "PPO-1674390088"
+model_folder = "PPO-1698578373"
 
 model_path = f"logs/snek-{version}/{model_folder}/best_model.zip"
 
 model = PPO.load(model_path, env=env)
 
 # Enjoy trained agent
-obs = env.reset()
+obs, _ = env.reset()
 snake_lengths = []
 
 done_count = 0
@@ -35,8 +34,10 @@ done_count = 0
 # but a while loop checks how many times the environment is completed
 while done_count <= 100:
     # fully deterministic models sometimes get stuck
+
     action, _states = model.predict(obs, deterministic=False)
-    obs, reward, done, info = env.step(action)
+
+    obs, reward, done, truncated, info = env.step(action)
 
     if RENDER:
         # "robot" or "human"
@@ -48,9 +49,9 @@ while done_count <= 100:
     if done:
         print(info["length"])
         snake_lengths.append(info["length"])
-        obs = env.reset()
+        obs, _ = env.reset()
         done_count += 1
 
-print(f"avg: {sum(snake_lengths) / len(snake_lengths)}")
+print(f"avg: {np.mean(snake_lengths)}")
 print(f"all lengths:{sorted(snake_lengths)}")
 print(f"longest snake: {max(snake_lengths)}")
