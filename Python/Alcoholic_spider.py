@@ -37,7 +37,6 @@ def get_correct_url() -> str:
     # regex hakee tuotemäärän
     product_count = re.findall('\d', products)
     product_count = int("".join(product_count))
-
     print("tuotemäärä: ", product_count)
 
     # sivumäärä saadaan tuotemäärästä
@@ -132,9 +131,10 @@ def make_dict_from_data(product_data, product_price):
 
 def print_alcohol_data(sorted_alcohol_dict):
     for key in sorted_alcohol_dict:
-        # print(i, sorted_alcohol_dict[i])
-
-        print(f"{key}: alkoholi % per litra per euro: {sorted_alcohol_dict[key][-1]}")
+        try:
+            print(f"{key}: alkoholi % per litra per euro: {sorted_alcohol_dict[key][-1]}")
+        except Exception as e:
+            pass
 
     print(f"lopullinen tuotemäärä: {len(sorted_alcohol_dict)}")
     # print("prices ", len(product_price))
@@ -161,7 +161,7 @@ def main():
     dataframe.drop_duplicates(subset="Name", inplace=True)
     dataframe.sort_values("Alcohol_per_l", ascending=False, inplace=True)
 
-    # Pyplot avaa offline nettisivun top 30 parhaasta tuloksesta graaphina
+    # plotly avaa offline nettisivun top 30 parhaasta tuloksesta graaphina
     fig = px.bar(data_frame=dataframe.head(30), x="Name", y="Alcohol_per_l")
     fig.show()
 
