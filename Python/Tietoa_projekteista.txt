@@ -48,7 +48,7 @@ ML-snake:
    kaikki muu on jo ennestään hoidettua eikä mitään tarvtse muuttaa
    voit asettaa RENDER = False, niin peli ajaa nopeasti 100 kierrosta loppuun, mutta näet vain konsoliin tulostetun loppupituuden jokaisen kuoleman jälkeen
 
-   paras pituus joka tuli vastaan oli 174
+   paras pituus joka tuli vastaan oli 178
 
 
 Linkki Kaggle profiilin data-analyysi / ML prediktio töihin:
