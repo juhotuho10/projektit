@@ -64,12 +64,15 @@ Brawlhalla ml:
    HUOM: en ole vielä trainannut mitään agenttia, sillä treenaamisen pitää olla realiaikaista, kosta minulla ei ole custom environmenttia.
    tämän takia treenaamiseen saattaa mennä joitain viikkoja ja minulla ei vain ole aikaa siihen ainakaan tällähetkellä
 
+   Videossa Demo_recording olen vain offline pelissä, jossa on mukana harmiton training bot, tämä on vain toiminnan näyttämiseksi
+
    ohjelma ottaa mustavalko screenshotteja bralhalla ohjelman ikkunasta, joista se tekee 540x960 numpy arrayn ja tämä syötetään ML algoon.
 
    screenshotista capturaan vihollisen ja oman health baarin, ja käytän healthbaarin muutosta rewarding tuottamiseen
 
    mitä enemmän vahinkoa tekee, sen isompi reward. kun kuolee niin reward on -10 ja jos saa vastustajan kuolemaan, reward on 10. 
    
+
 Linkki Kaggle profiilin data-analyysi / ML prediktio töihin:
    https://www.kaggle.com/juhotuho10/code
 
