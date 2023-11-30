@@ -1,5 +1,7 @@
+(linkistä löytyy lisää projektitöitäni)
 Linkki Kaggle profiilin data-analyysi / ML prediktio töihin:
    https://www.kaggle.com/juhotuho10/code
+   
 
 Lotto simulaattori:
 
@@ -32,6 +34,9 @@ Minesweeper:
 
    Tehty 2021 marraskuussa, Yliopisto ohjelmointi 1 lopullinen projekti työ, yksin tehty
    Yksinkertainen miinaharava peli
+   
+   alussa teet kentän koon ja asetat miinamäärän
+   pelissä left click avaa laatan, right click asettaa lipun
 
 ML-snake:
    
