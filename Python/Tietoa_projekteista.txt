@@ -1,3 +1,6 @@
+Linkki Kaggle profiilin data-analyysi / ML prediktio töihin:
+   https://www.kaggle.com/juhotuho10/code
+
 Lotto simulaattori:
 
    Tehty 2019 Tammikuussa
@@ -73,6 +76,4 @@ Brawlhalla ml:
    mitä enemmän vahinkoa tekee, sen isompi reward. kun kuolee niin reward on -10 ja jos saa vastustajan kuolemaan, reward on 10. 
    
 
-Linkki Kaggle profiilin data-analyysi / ML prediktio töihin:
-   https://www.kaggle.com/juhotuho10/code
 
