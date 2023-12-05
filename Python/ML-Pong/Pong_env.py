@@ -151,8 +151,11 @@ class Pong_env(gym.Env):
                 self.ball_y = self.ball_radius
                 
                 # ball spin is transferred to x momentum 
-                self.ball_speed_x -= self.ball_spin * 0.2
+                spin_momentum = self.ball_spin * 0.4
                 self.ball_spin *= 0.5
+
+                self.ball_speed_x -= spin_momentum
+                self.ball_speed_y += spin_momentum
                 
 
             elif ball_down_surface >= self.height:
@@ -161,9 +164,12 @@ class Pong_env(gym.Env):
                 self.ball_y = self.height - self.ball_radius
 
                 # ball spin is transferred to x momentum 
-                self.ball_speed_x += self.ball_spin * 0.2
+                spin_momentum = self.ball_spin * 0.4
                 self.ball_spin *= 0.5
-                
+
+                self.ball_speed_x += spin_momentum
+                self.ball_speed_y -= spin_momentum
+
 
             # Ball collision with left paddle
             if ball_left_surface <= self.paddle1_suface and \
@@ -178,8 +184,9 @@ class Pong_env(gym.Env):
                 # getting the spin speed difference and applying that the the Y momentum
                 speed_difference = self.paddle1_speed + self.ball_spin
 
-                self.ball_spin += speed_difference * 0.5
+                self.ball_spin += speed_difference * 0.9
                 self.ball_speed_y += speed_difference * 0.2
+                self.ball_speed_x -= speed_difference * 0.2
 
                     
 
@@ -196,8 +203,9 @@ class Pong_env(gym.Env):
                 # getting the spin speed difference and applying that the the Y momentum
                 speed_difference = self.paddle2_speed - self.ball_spin
 
-                self.ball_spin += speed_difference * 0.5
+                self.ball_spin += speed_difference * 0.9
                 self.ball_speed_y += speed_difference * 0.2
+                self.ball_speed_x -= speed_difference * 0.2
 
 
                 reward = 0.05
@@ -269,13 +277,18 @@ class Pong_env(gym.Env):
         # ball
         cv2.circle(self.img, (int(self.ball_x), int(self.ball_y)), self.ball_size // 2, gray, -1)
 
-
-        dot_radius = self.ball_radius / 3
         self.ball_spin_angle += self.ball_spin / 5 
-        dot_x = int(self.ball_x + dot_radius * math.cos(self.ball_spin_angle))
-        dot_y = int(self.ball_y + dot_radius * math.sin(self.ball_spin_angle))
 
-        cv2.circle(self.img, (dot_x, dot_y), 3, red, -1)
+        # red line across the ball to indicate spin
+        line_length = self.ball_radius
+        
+        start_x = int(self.ball_x + line_length * math.cos(self.ball_spin_angle))
+        start_y = int(self.ball_y + line_length * math.sin(self.ball_spin_angle))
+        end_x = int(self.ball_x - line_length * math.cos(self.ball_spin_angle))
+        end_y = int(self.ball_y - line_length * math.sin(self.ball_spin_angle))
+
+
+        cv2.line(self.img, (start_x, start_y), (end_x, end_y), red, 2)
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         text = f'X: {self.ball_speed_x:.2f}\nY: {self.ball_speed_y:.2f}\nSpin: {self.ball_spin:.2f}'
