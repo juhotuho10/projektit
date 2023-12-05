@@ -70,7 +70,7 @@ class Pong_env(gym.Env):
         
         # ball outer surface spin speed
         # positive means clockwise spin
-        self.ball_spin = 0
+        self.ball_spin = random.uniform(-5, 5)
         self.ball_spin_angle = 0
         
     def take_action(self, action):
@@ -137,6 +137,8 @@ class Pong_env(gym.Env):
             
             reward = 0
 
+            momentum_multiplier = 0.3
+
             ball_up_surface = self.ball_y - self.ball_radius
             ball_left_surface = self.ball_x - self.ball_radius
 
@@ -149,26 +151,39 @@ class Pong_env(gym.Env):
                 self.ball_speed_y = -self.ball_speed_y
                 # adjust ball position to be within bounds
                 self.ball_y = self.ball_radius
-                
-                # ball spin is transferred to x momentum 
-                spin_momentum = self.ball_spin * 0.4
-                self.ball_spin *= 0.5
 
-                self.ball_speed_x -= spin_momentum
-                self.ball_speed_y += spin_momentum
+                # ball spin is transferred to x momentum 
+                # and ball momentum is transferred to speed
+                speed_induced_spin = -self.ball_speed_y * momentum_multiplier
+                self.ball_speed_y *= 1 - momentum_multiplier
+
+                spin_induced_speed = self.ball_spin * momentum_multiplier
+                spin_induced_speed  *= 1 - momentum_multiplier
+
+                self.ball_spin += speed_induced_spin
+
+                self.ball_speed_x -= spin_induced_speed
+                self.ball_speed_y += spin_induced_speed
+
                 
 
             elif ball_down_surface >= self.height:
-                self.ball_speed_y = -self.ball_speed_y
-
+                self.ball_speed_y = -self.ball_speed_y * 0.95
+                # adjust ball position to be within bounds
                 self.ball_y = self.height - self.ball_radius
-
+        
                 # ball spin is transferred to x momentum 
-                spin_momentum = self.ball_spin * 0.4
-                self.ball_spin *= 0.5
+                # and ball momentum is transferred to speed
+                speed_induced_spin = self.ball_speed_y * momentum_multiplier
+                self.ball_speed_y *= 1 - momentum_multiplier
 
-                self.ball_speed_x += spin_momentum
-                self.ball_speed_y -= spin_momentum
+                spin_induced_speed = -self.ball_spin * momentum_multiplier
+                spin_induced_speed  *= 1 - momentum_multiplier
+
+                self.ball_spin += speed_induced_spin
+
+                self.ball_speed_x -= spin_induced_speed
+                self.ball_speed_y += spin_induced_speed
 
 
             # Ball collision with left paddle
@@ -280,7 +295,7 @@ class Pong_env(gym.Env):
         self.ball_spin_angle += self.ball_spin / 5 
 
         # red line across the ball to indicate spin
-        line_length = self.ball_radius
+        line_length = self.ball_radius - 1
         
         start_x = int(self.ball_x + line_length * math.cos(self.ball_spin_angle))
         start_y = int(self.ball_y + line_length * math.sin(self.ball_spin_angle))
