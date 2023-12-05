@@ -9,6 +9,10 @@ black = (0,0,0)
 white = (255,255,255)
 gray = (200,200,200)
 
+blue = (255, 0, 0)
+green = (0, 255, 0)
+red = (0, 0, 255)
+
 
 class Pong_env(gym.Env):
     """Custom Environment that follows gym interface."""
@@ -47,6 +51,7 @@ class Pong_env(gym.Env):
 
 
     def reset_game(self):
+
         self.reward = 0
 
         self.img = np.zeros((self.width, self.height, 3), dtype='uint8') + 20
@@ -62,6 +67,11 @@ class Pong_env(gym.Env):
 
         self.ball_x = self.width / 2
         self.ball_y = self.height / 2
+        
+        # ball outer surface spin speed
+        # positive means clockwise spin
+        self.ball_spin = 0
+        self.ball_spin_angle = 0
         
     def take_action(self, action):
         
@@ -134,35 +144,61 @@ class Pong_env(gym.Env):
             ball_right_surface = self.ball_x + self.ball_radius
 
 
-            # Ball collision with top and bottom walls
-            if ball_up_surface <= 0 or ball_down_surface >= self.height:
+            # ball collision with top and bottom walls
+            if ball_up_surface <= 0:
                 self.ball_speed_y = -self.ball_speed_y
-                # Adjust ball position to be within bounds
-                self.ball_y = max(self.ball_radius, min(self.height - self.ball_radius, self.ball_y))
+                # adjust ball position to be within bounds
+                self.ball_y = self.ball_radius
+                
+                # ball spin is transferred to x momentum 
+                self.ball_speed_x -= self.ball_spin * 0.2
+                self.ball_spin *= 0.5
+                
+
+            elif ball_down_surface >= self.height:
+                self.ball_speed_y = -self.ball_speed_y
+
+                self.ball_y = self.height - self.ball_radius
+
+                # ball spin is transferred to x momentum 
+                self.ball_speed_x += self.ball_spin * 0.2
+                self.ball_spin *= 0.5
+                
 
             # Ball collision with left paddle
             if ball_left_surface <= self.paddle1_suface and \
                 ball_down_surface >= self.paddle1_y and \
                 ball_up_surface <= self.paddle1_y + self.paddle1_height:
                 
-                self.ball_speed_x = -self.ball_speed_x
-                self.ball_x = self.paddle1_suface + self.ball_radius  # Adjust ball position to prevent sticking
+                self.ball_speed_x = -self.ball_speed_x * 1.05
 
-                # Adjust ball speed after hitting left paddle
-                self.ball_speed_x *= 1.05 
-                self.ball_speed_y += self.paddle1_speed * 0.01
+                # adjust ball position to prevent sticking
+                self.ball_x = self.paddle1_suface + self.ball_radius
+
+                # getting the spin speed difference and applying that the the Y momentum
+                speed_difference = self.paddle1_speed + self.ball_spin
+
+                self.ball_spin += speed_difference * 0.5
+                self.ball_speed_y += speed_difference * 0.2
+
+                    
 
             # Ball collision with right paddle
             if ball_right_surface >= self.paddle2_suface and \
                 ball_down_surface >= self.paddle2_y and \
                 ball_up_surface <= self.paddle2_y + self.paddle2_height:
 
-                self.ball_speed_x = -self.ball_speed_x
-                self.ball_x = self.paddle2_suface - self.ball_radius  # Adjust ball position to prevent sticking
+                self.ball_speed_x = -self.ball_speed_x * 1.05
 
-                # Adjust ball speed after hitting right paddle
-                self.ball_speed_x *= 1.05 
-                self.ball_speed_y += self.paddle2_speed * 0.01
+                # adjust ball position to prevent sticking
+                self.ball_x = self.paddle2_suface - self.ball_radius  
+
+                # getting the spin speed difference and applying that the the Y momentum
+                speed_difference = self.paddle2_speed - self.ball_spin
+
+                self.ball_spin += speed_difference * 0.5
+                self.ball_speed_y += speed_difference * 0.2
+
 
                 reward = 0.05
 
@@ -198,20 +234,16 @@ class Pong_env(gym.Env):
 
         self.reward += win_reward
 
-        # Reset the ball for the next round if a point is scored
-        if done:
-            self.ball_x = self.width / 2
-            self.ball_y = self.height / 2
-            self.ball_speed_x = -self.ball_speed_x  # Change ball direction
-
         observation = self.get_observation()
 
+        if done:
+            self.reset_game()
+
         truncated = False
-        info = {"action": action, "reward": self.reward}
+
+        #info = {"action": action, "reward": self.reward}
 
         info = {}
-
-        #print(info)
 
         return observation, self.reward, done, truncated, info
 
@@ -224,21 +256,33 @@ class Pong_env(gym.Env):
         info = {}
         return observation, info
 
-    def render(self, mode='human'):
-        # Initialize the image array with black background
+    def render(self):
+        # initialize the image array with black background
         self.img = np.zeros((self.height, self.width, 3), dtype=np.uint8)
 
         # left paddle
         cv2.rectangle(self.img, (self.paddle_x, int(self.paddle1_y)), (self.paddle_x + self.paddle_width, int(self.paddle1_y + self.paddle1_height)), gray, -1)
+
         # right paddle
         cv2.rectangle(self.img, (self.width - self.paddle_x - self.paddle_width, int(self.paddle2_y)), (self.width - self.paddle_x, int(self.paddle2_y + self.paddle2_height)), gray, -1)
-        # Ball
+
+        # ball
         cv2.circle(self.img, (int(self.ball_x), int(self.ball_y)), self.ball_size // 2, gray, -1)
 
-        # Display the image using OpenCV (if mode is 'human')
-        if mode == 'human':
-            cv2.imshow("Pong", self.img)
-            cv2.waitKey(1)
 
-    def close(self):
-        ...
+        dot_radius = self.ball_radius / 3
+        self.ball_spin_angle += self.ball_spin / 5 
+        dot_x = int(self.ball_x + dot_radius * math.cos(self.ball_spin_angle))
+        dot_y = int(self.ball_y + dot_radius * math.sin(self.ball_spin_angle))
+
+        cv2.circle(self.img, (dot_x, dot_y), 3, red, -1)
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        text = f'X: {self.ball_speed_x:.2f}\nY: {self.ball_speed_y:.2f}\nSpin: {self.ball_spin:.2f}'
+        y0, dy = 30, 15
+        for i, line in enumerate(text.split('\n')):
+            y = y0 + i*dy
+            cv2.putText(self.img, line, (10, y), font, 0.5, gray, 1, cv2.LINE_AA)
+
+        cv2.imshow("Pong", self.img)
+        cv2.waitKey(1)

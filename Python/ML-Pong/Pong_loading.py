@@ -32,7 +32,6 @@ done_count = 0
 # while loop has to be here since for loop would only render x amount of steps
 # but a while loop checks how many times the environment is completed
 while done_count <= 100:
-    # fully deterministic models sometimes get stuck
 
     action, _states = model.predict(obs, deterministic=True)
 
@@ -41,9 +40,7 @@ while done_count <= 100:
     print(obs)
 
     if RENDER:
-        # "robot" or "human"
-        # "robot" is 5x faster than human render
-        env.render(mode="human")
+        env.render()
 
     # if the snake is stuck and spinning in circles, this resets it
 
