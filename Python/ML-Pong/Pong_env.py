@@ -70,7 +70,9 @@ class Pong_env(gym.Env):
         
         # ball outer surface spin speed
         # positive means clockwise spin
-        self.ball_spin = random.uniform(-5, 5)
+        #self.ball_spin = random.uniform(-5, 5)
+
+        self.ball_spin = random.choice([-10,10])
         self.ball_spin_angle = 0
         
     def take_action(self, action):
@@ -132,103 +134,136 @@ class Pong_env(gym.Env):
             self.paddle2_y = self.height - self.paddle2_height
             self.paddle2_speed = -self.paddle2_speed * 0.5
 
+    def random_momentum_transfer(self):
+
+        if abs(self.ball_speed_x) > 0.5:
+            return
+    
+        # Transfer some of the movement to spin
+        spin_transfer_ratio = random.uniform(0.2, 0.6)
+        y_transfer_ratio = random.uniform(0.2, 0.6)
+
+        # np sign turns into poositive or negative 1
+        self.ball_speed_x + np.sign(self.ball_speed_x) * (abs(self.ball_spin * spin_transfer_ratio) + abs(self.ball_speed_y * y_transfer_ratio))
+
+
+        self.ball_spin *= (1 - spin_transfer_ratio)
+        self.ball_speed_y *= (1 - y_transfer_ratio)
+
 
     def get_ball_collisions(self):
             
-            reward = 0
+        reward = 0
 
-            momentum_multiplier = 0.3
+        momentum_multiplier = 0.3
 
-            ball_up_surface = self.ball_y - self.ball_radius
-            ball_left_surface = self.ball_x - self.ball_radius
+        ball_up_surface = self.ball_y - self.ball_radius
+        ball_left_surface = self.ball_x - self.ball_radius
 
-            ball_down_surface = self.ball_y + self.ball_radius
-            ball_right_surface = self.ball_x + self.ball_radius
+        ball_down_surface = self.ball_y + self.ball_radius
+        ball_right_surface = self.ball_x + self.ball_radius
 
 
-            # ball collision with top and bottom walls
-            if ball_up_surface <= 0:
-                self.ball_speed_y = -self.ball_speed_y
-                # adjust ball position to be within bounds
-                self.ball_y = self.ball_radius
+        # ball collision with top and bottom walls
+        if ball_up_surface <= 0:
+            self.ball_speed_y = -self.ball_speed_y
+            # adjust ball position to be within bounds
+            self.ball_y = self.ball_radius
 
-                # ball spin is transferred to x momentum 
-                # and ball momentum is transferred to speed
-                speed_induced_spin = -self.ball_speed_y * momentum_multiplier
-                self.ball_speed_y *= 1 - momentum_multiplier
+            # ball spin is transferred to x momentum 
+            # and ball momentum is transferred to speed
+            speed_induced_spin = self.ball_speed_x * momentum_multiplier * 1.05
+            spin_induced_speed = self.ball_spin * momentum_multiplier * 1.05
 
-                spin_induced_speed = self.ball_spin * momentum_multiplier
-                spin_induced_speed  *= 1 - momentum_multiplier
+            self.ball_speed_x *= 1 - momentum_multiplier
+            self.ball_spin  *= 1 - momentum_multiplier
 
-                self.ball_spin += speed_induced_spin
+            self.ball_spin -= speed_induced_spin
 
-                self.ball_speed_x -= spin_induced_speed
-                self.ball_speed_y += spin_induced_speed
+            self.ball_speed_x -= spin_induced_speed
+            self.ball_speed_y += spin_induced_speed
 
+            self.random_momentum_transfer()    
+
+        elif ball_down_surface >= self.height:
+            self.ball_speed_y = -self.ball_speed_y
+            # adjust ball position to be within bounds
+            self.ball_y = self.height - self.ball_radius
+    
+            # ball spin is transferred to x momentum 
+            # and ball momentum is transferred to speed
+            speed_induced_spin = -self.ball_speed_x * momentum_multiplier * 1.05
+            spin_induced_speed = -self.ball_spin * momentum_multiplier * 1.05
+
+            self.ball_speed_x *= 1 - momentum_multiplier
+            self.ball_spin *= 1 - momentum_multiplier
+
+            self.ball_spin -= speed_induced_spin
+
+            self.ball_speed_x -= spin_induced_speed
+            self.ball_speed_y += spin_induced_speed
+
+            self.random_momentum_transfer()   
+
+
+        # Ball collision with left paddle
+        if ball_left_surface <= self.paddle1_suface and \
+            ball_down_surface >= self.paddle1_y and \
+            ball_up_surface <= self.paddle1_y + self.paddle1_height:
+            
+            self.ball_speed_x = -self.ball_speed_x
+
+            # adjust ball position to prevent sticking
+            self.ball_x = self.paddle1_suface + self.ball_radius
+
+            # getting the spin speed difference and applying that the the Y momentum
+            speed_difference = self.paddle1_speed - self.ball_speed_y
+
+            # ball spin is transferred to x momentum 
+            # and ball momentum is transferred to speed
+            speed_induced_spin = -speed_difference * momentum_multiplier * 1.05
+            spin_induced_speed = -self.ball_spin * momentum_multiplier * 1.05
+
+            self.ball_speed_y *= 1 - momentum_multiplier
+            self.ball_spin *= 1 - momentum_multiplier
+
+            self.ball_spin -= speed_induced_spin
+
+            self.ball_speed_y -= spin_induced_speed
+            self.ball_speed_x += spin_induced_speed
+
+
+        # Ball collision with right paddle
+        if ball_right_surface >= self.paddle2_suface and \
+            ball_down_surface >= self.paddle2_y and \
+            ball_up_surface <= self.paddle2_y + self.paddle2_height:
+
+            self.ball_speed_x = -self.ball_speed_x
+
+            # adjust ball position to prevent sticking
+            self.ball_x = self.paddle2_suface - self.ball_radius  
+
+            # getting the spin speed difference and applying that the the Y momentum
+            speed_difference = self.paddle2_speed - self.ball_speed_y
+
+            # ball spin is transferred to x momentum 
+            # and ball momentum is transferred to speed
+            speed_induced_spin = speed_difference * momentum_multiplier * 1.05
+            spin_induced_speed = self.ball_spin * momentum_multiplier * 1.05
+
+            self.ball_speed_y *= 1 - momentum_multiplier
+            self.ball_spin *= 1 - momentum_multiplier
+
+            self.ball_spin -= speed_induced_spin
+
+            self.ball_speed_y -= spin_induced_speed
+            self.ball_speed_x += spin_induced_speed
+
+            reward = 0.05
+
+        return reward
+  
                 
-
-            elif ball_down_surface >= self.height:
-                self.ball_speed_y = -self.ball_speed_y * 0.95
-                # adjust ball position to be within bounds
-                self.ball_y = self.height - self.ball_radius
-        
-                # ball spin is transferred to x momentum 
-                # and ball momentum is transferred to speed
-                speed_induced_spin = self.ball_speed_y * momentum_multiplier
-                self.ball_speed_y *= 1 - momentum_multiplier
-
-                spin_induced_speed = -self.ball_spin * momentum_multiplier
-                spin_induced_speed  *= 1 - momentum_multiplier
-
-                self.ball_spin += speed_induced_spin
-
-                self.ball_speed_x -= spin_induced_speed
-                self.ball_speed_y += spin_induced_speed
-
-
-            # Ball collision with left paddle
-            if ball_left_surface <= self.paddle1_suface and \
-                ball_down_surface >= self.paddle1_y and \
-                ball_up_surface <= self.paddle1_y + self.paddle1_height:
-                
-                self.ball_speed_x = -self.ball_speed_x * 1.05
-
-                # adjust ball position to prevent sticking
-                self.ball_x = self.paddle1_suface + self.ball_radius
-
-                # getting the spin speed difference and applying that the the Y momentum
-                speed_difference = self.paddle1_speed + self.ball_spin
-
-                self.ball_spin += speed_difference * 0.9
-                self.ball_speed_y += speed_difference * 0.2
-                self.ball_speed_x -= speed_difference * 0.2
-
-                    
-
-            # Ball collision with right paddle
-            if ball_right_surface >= self.paddle2_suface and \
-                ball_down_surface >= self.paddle2_y and \
-                ball_up_surface <= self.paddle2_y + self.paddle2_height:
-
-                self.ball_speed_x = -self.ball_speed_x * 1.05
-
-                # adjust ball position to prevent sticking
-                self.ball_x = self.paddle2_suface - self.ball_radius  
-
-                # getting the spin speed difference and applying that the the Y momentum
-                speed_difference = self.paddle2_speed - self.ball_spin
-
-                self.ball_spin += speed_difference * 0.9
-                self.ball_speed_y += speed_difference * 0.2
-                self.ball_speed_x -= speed_difference * 0.2
-
-
-                reward = 0.05
-
-            return reward
-                
-
-
     def step(self, action):
 
         # movement = lower reward
@@ -292,7 +327,7 @@ class Pong_env(gym.Env):
         # ball
         cv2.circle(self.img, (int(self.ball_x), int(self.ball_y)), self.ball_size // 2, gray, -1)
 
-        self.ball_spin_angle += self.ball_spin / 5 
+        self.ball_spin_angle += self.ball_spin / 10
 
         # red line across the ball to indicate spin
         line_length = self.ball_radius - 1
