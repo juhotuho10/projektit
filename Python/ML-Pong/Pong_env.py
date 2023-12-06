@@ -140,15 +140,18 @@ class Pong_env(gym.Env):
             return
     
         # Transfer some of the movement to spin
-        spin_transfer_ratio = random.uniform(0.2, 0.6)
-        y_transfer_ratio = random.uniform(0.2, 0.6)
+        spin_transfer_ratio = random.uniform(0.1, 0.3)
+        y_transfer_ratio = random.uniform(0.1, 0.3)
 
         # np sign turns into poositive or negative 1
-        self.ball_speed_x + np.sign(self.ball_speed_x) * (abs(self.ball_spin * spin_transfer_ratio) + abs(self.ball_speed_y * y_transfer_ratio))
+        print(np.sign(self.ball_speed_x) * abs(self.ball_spin * spin_transfer_ratio) + abs(self.ball_speed_y * y_transfer_ratio))
+        self.ball_speed_x += np.sign(self.ball_speed_x) * (abs(self.ball_spin * spin_transfer_ratio) + abs(self.ball_speed_y * y_transfer_ratio))
 
 
-        self.ball_spin *= (1 - spin_transfer_ratio)
-        self.ball_speed_y *= (1 - y_transfer_ratio)
+    def add_momentum(self, amount = 1.07):
+        self.ball_spin *= amount
+        self.ball_speed_x *= amount
+        self.ball_speed_y *= amount
 
 
     def get_ball_collisions(self):
@@ -170,10 +173,12 @@ class Pong_env(gym.Env):
             # adjust ball position to be within bounds
             self.ball_y = self.ball_radius
 
+            self.add_momentum()
+
             # ball spin is transferred to x momentum 
             # and ball momentum is transferred to speed
-            speed_induced_spin = self.ball_speed_x * momentum_multiplier * 1.05
-            spin_induced_speed = self.ball_spin * momentum_multiplier * 1.05
+            speed_induced_spin = self.ball_speed_x * momentum_multiplier
+            spin_induced_speed = self.ball_spin * momentum_multiplier
 
             self.ball_speed_x *= 1 - momentum_multiplier
             self.ball_spin  *= 1 - momentum_multiplier
@@ -189,11 +194,13 @@ class Pong_env(gym.Env):
             self.ball_speed_y = -self.ball_speed_y
             # adjust ball position to be within bounds
             self.ball_y = self.height - self.ball_radius
+
+            self.add_momentum()
     
             # ball spin is transferred to x momentum 
             # and ball momentum is transferred to speed
-            speed_induced_spin = -self.ball_speed_x * momentum_multiplier * 1.05
-            spin_induced_speed = -self.ball_spin * momentum_multiplier * 1.05
+            speed_induced_spin = -self.ball_speed_x * momentum_multiplier
+            spin_induced_speed = -self.ball_spin * momentum_multiplier
 
             self.ball_speed_x *= 1 - momentum_multiplier
             self.ball_spin *= 1 - momentum_multiplier
@@ -216,13 +223,15 @@ class Pong_env(gym.Env):
             # adjust ball position to prevent sticking
             self.ball_x = self.paddle1_suface + self.ball_radius
 
+            self.add_momentum()
+
             # getting the spin speed difference and applying that the the Y momentum
             speed_difference = self.paddle1_speed - self.ball_speed_y
 
             # ball spin is transferred to x momentum 
             # and ball momentum is transferred to speed
-            speed_induced_spin = -speed_difference * momentum_multiplier * 1.05
-            spin_induced_speed = -self.ball_spin * momentum_multiplier * 1.05
+            speed_induced_spin = -speed_difference * momentum_multiplier
+            spin_induced_speed = -self.ball_spin * momentum_multiplier
 
             self.ball_speed_y *= 1 - momentum_multiplier
             self.ball_spin *= 1 - momentum_multiplier
@@ -243,13 +252,15 @@ class Pong_env(gym.Env):
             # adjust ball position to prevent sticking
             self.ball_x = self.paddle2_suface - self.ball_radius  
 
+            self.add_momentum()
+
             # getting the spin speed difference and applying that the the Y momentum
             speed_difference = self.paddle2_speed - self.ball_speed_y
 
             # ball spin is transferred to x momentum 
             # and ball momentum is transferred to speed
-            speed_induced_spin = speed_difference * momentum_multiplier * 1.05
-            spin_induced_speed = self.ball_spin * momentum_multiplier * 1.05
+            speed_induced_spin = speed_difference * momentum_multiplier
+            spin_induced_speed = self.ball_spin * momentum_multiplier
 
             self.ball_speed_y *= 1 - momentum_multiplier
             self.ball_spin *= 1 - momentum_multiplier
