@@ -30,13 +30,17 @@ def get_html_from_url(url, timeout):
 @timing
 def get_correct_url() -> str:
     url = "https://www.alko.fi/tuotteet/tuotelistaus?SearchTerm=*&PageSize=12&SortingAttribute=&PageNumber=1&SearchParameter=%26%40QueryTerm%3D*%26ContextCategoryUUID%3D6Q7AqG5uhTIAAAFVOmkI2BYA%26OnlineFlag%3D1"
-    doc = get_html_from_url(url, timeout=30)
-    try:
-        products = doc.find(class_="color-primary")
-        products = str(*products)
-    except Exception as e:
-        print("couldn't load the page\n")
-        print(e)
+
+
+    for i in range(10):
+        try:
+            doc = get_html_from_url(url, timeout=30)
+            products = doc.find(class_="color-primary")
+            products = str(*products)
+            break
+        except Exception as e:
+            print("couldn't load the page\n")
+            print(e)
 
     # regex hakee tuotemäärän
     product_count = re.findall('\d', products)
@@ -110,9 +114,9 @@ def make_dict_from_data(product_data, product_price):
             price = product_price[i]
 
             try:
-                adjusted_price = float(price) / float(size)
+                adjusted_price = round(float(price) / float(size), 3)
 
-                alcohol_per_l = float(alcohol) / adjusted_price
+                alcohol_per_l = round(float(alcohol) / adjusted_price ,3)
 
                 df_data = {'Name': [name], 'Alcohol': [alcohol], 'Size': [size], 'Price': [price],
                            'Price_per_liter': [adjusted_price], 'Alcohol_per_euro_per_liter': [alcohol_per_l]}
@@ -121,7 +125,7 @@ def make_dict_from_data(product_data, product_price):
 
                 df = pd.concat([df, new_data], ignore_index=False)
 
-                alcohol_dict.update({name: [alcohol, size, price, f"{adjusted_price:.3f}", f"{alcohol_per_l:.3f}"]})
+                alcohol_dict.update({name: [alcohol, size, price, f"{adjusted_price}", f"{alcohol_per_l}"]})
             except Exception:
                 # virheellinen tuote
                 print(name, price, size)
