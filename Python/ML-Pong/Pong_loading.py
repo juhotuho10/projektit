@@ -18,7 +18,7 @@ version = 1
 env = Pong_env()
 env.reset()
 
-model_folder = "1701784901"
+model_folder = "1702140034"
 
 model_path = f"logs/Pong-{version}/{model_folder}/best_model.zip"
 
@@ -37,7 +37,7 @@ while done_count <= 100:
 
     obs, reward, done, truncated, info = env.step(action)
  
-    print(obs)
+    #print(obs)
 
     if RENDER:
         env.render()
