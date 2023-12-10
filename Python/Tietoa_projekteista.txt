@@ -79,6 +79,15 @@ Brawlhalla ml:
    screenshotista capturaan vihollisen ja oman health baarin, ja käytän healthbaarin muutosta rewarding tuottamiseen
 
    mitä enemmän vahinkoa tekee, sen isompi reward. kun kuolee niin reward on -10 ja jos saa vastustajan kuolemaan, reward on 10. 
+
+
+ML-pong:
+   Tehty 2023 Joulukuussa. Kyseessä on pong, mutta ei mikä tahansa pong peli, vaan pallo käyttäytyy kuin superpallo joka pyörii ja johon kohdistuu vähän liitoiteltuja fysiikan voimia
+   pallo on vähän arvaamaton parhainakin aikoina ja kun ajan myötä pallon nopeus kiihtyy, pelistä saattaa tulla hieman hektinen
+
+   Ideana on, että pystyt pelaamaan kyseistä pong peliä ML mallia vastaan ja peli pitää scorea, montako kertaa kumpikin on saanut pointin
+
+   
    
 
 
