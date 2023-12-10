@@ -6,10 +6,8 @@ import time
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 
-# HUOM. train mallin ja load mallin täytyy olla samat
-from Pong_env import Pong_env
+from Pong_play_env import Pong_env
 
-# If you want to render the game, goes a lot faster without rendering, but you can only see the snake length
 RENDER = True
 
 TIMESTEPS = 5_000
@@ -41,8 +39,6 @@ while done_count <= 100:
 
     if RENDER:
         env.render()
-
-    # if the snake is stuck and spinning in circles, this resets it
 
     if done:
         obs, _ = env.reset()

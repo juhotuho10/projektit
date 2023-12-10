@@ -6,7 +6,7 @@ import os
 import time
 
 from stable_baselines3 import PPO
-from Pong_env import Pong_env
+from Pong_train_env import Pong_env
 
 from stable_baselines3.common import results_plotter
 from stable_baselines3.common.monitor import Monitor

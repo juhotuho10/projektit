@@ -34,8 +34,8 @@ class Pong_env(gym.Env):
 
         self.paddle_width = 4
 
-        self.paddle1_height = 300
-        self.paddle2_height = 60
+        self.paddle1_height = self.height - 60
+        self.paddle2_height = 80
 
         self.paddle_x = 30
 
@@ -45,7 +45,8 @@ class Pong_env(gym.Env):
         self.ball_size = 10
         self.ball_radius = self.ball_size / 2
 
-        self.paddle_acceleration = 5
+        self.paddle_acceleration1 = 1
+        self.paddle_acceleration2 = 5
 
         self.reset_game()
 
@@ -59,7 +60,7 @@ class Pong_env(gym.Env):
         self.ball_speed_x = random.choice([-5,5]) 
         self.ball_speed_y = random.uniform(-10, 10)
 
-        self.paddle1_y = self.height / 5
+        self.paddle1_y = 30
         self.paddle2_y = self.height / 2
 
         self.paddle1_speed = 0
@@ -74,18 +75,29 @@ class Pong_env(gym.Env):
 
         self.ball_spin = random.uniform(-10, 10)
         self.ball_spin_angle = 0
+
+
+    def key_listener(self):
+        while True:
+            key = cv2.waitKey(1)
+            if key == ord('w'):
+                self.key_pressed = 'w'
+            elif key == ord('s'):
+                self.key_pressed = 's'
+            else:
+                self.key_pressed = None
         
     def take_action(self, action):
         
         if action == 0: 
             # move up
-            self.paddle2_speed += self.paddle_acceleration
+            self.paddle2_speed += self.paddle_acceleration2
         elif action == 1:
             # possibility to not move at all
             pass
         elif action == 2:  
             # move down
-            self.paddle2_speed -= self.paddle_acceleration
+            self.paddle2_speed -= self.paddle_acceleration2
 
     def get_observation(self):
 
@@ -125,7 +137,6 @@ class Pong_env(gym.Env):
             self.paddle1_y = self.height - self.paddle1_height
             self.paddle1_speed = -self.paddle1_speed * 0.5
 
-
         if self.paddle2_y <= 0:
             self.paddle2_y = 0
             self.paddle2_speed = -self.paddle2_speed * 0.5
@@ -148,7 +159,7 @@ class Pong_env(gym.Env):
         self.ball_speed_x += np.sign(self.ball_speed_x) * (abs(self.ball_spin * spin_transfer_ratio) + abs(self.ball_speed_y * y_transfer_ratio))
 
 
-    def add_momentum(self, amount = 1.06):
+    def add_momentum(self, amount = 1.07):
         self.ball_spin *= amount
         self.ball_speed_x *= amount
         self.ball_speed_y *= amount
@@ -220,6 +231,7 @@ class Pong_env(gym.Env):
 
         # Ball collision with left paddle
         if ball_left_surface <= self.paddle1_suface and \
+            self.ball_x >= self.paddle1_suface and \
             self.ball_y >= self.paddle1_y and \
             self.ball_y <= self.paddle1_y + self.paddle1_height:
             
@@ -249,6 +261,7 @@ class Pong_env(gym.Env):
 
         # Ball collision with right paddle
         if ball_right_surface >= self.paddle2_suface and \
+            self.ball_x <= self.paddle2_suface and \
             self.ball_y >= self.paddle2_y and \
             self.ball_y <= self.paddle2_y + self.paddle2_height:
 
@@ -345,6 +358,7 @@ class Pong_env(gym.Env):
         return observation, info
 
     def render(self):
+
         # initialize the image array with black background
         self.img = np.zeros((self.height, self.width, 3), dtype=np.uint8)
 
@@ -370,12 +384,12 @@ class Pong_env(gym.Env):
 
         cv2.line(self.img, (start_x, start_y), (end_x, end_y), red, 2)
 
-        font = cv2.FONT_HERSHEY_SIMPLEX
+        '''font = cv2.FONT_HERSHEY_SIMPLEX
         text = f'X: {self.ball_speed_x:.2f}\nY: {self.ball_speed_y:.2f}\nSpin: {self.ball_spin:.2f}\ntotal: {abs(self.ball_speed_x)+abs(self.ball_speed_y)+abs(self.ball_spin):.2f}'
         y0, dy = 30, 15
         for i, line in enumerate(text.split('\n')):
             y = y0 + i*dy
-            cv2.putText(self.img, line, (10, y), font, 0.5, gray, 1, cv2.LINE_AA)
+            cv2.putText(self.img, line, (10, y), font, 0.5, gray, 1, cv2.LINE_AA)'''
 
         cv2.imshow("Pong", self.img)
         cv2.waitKey(1)
