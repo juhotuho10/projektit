@@ -15,7 +15,7 @@ green = (0, 255, 0)
 red = (0, 0, 255)
 
 
-class Pong_env(gym.Env):
+class Pong_play_env(gym.Env):
     """Custom Environment that follows gym interface."""
 
     metadata = {"render_modes": ["human"], "render_fps": 30}
@@ -35,9 +35,6 @@ class Pong_env(gym.Env):
 
         self.paddle_width = 4
 
-        self.paddle1_height = 80
-        self.paddle2_height = 80
-
         self.paddle_x = 30
 
         self.paddle1_suface = self.paddle_x + self.paddle_width
@@ -54,7 +51,8 @@ class Pong_env(gym.Env):
 
     def reset_game(self):
 
-        self.reward = 0
+        self.paddle1_height = 80
+        self.paddle2_height = 80
 
         self.img = np.zeros((self.width, self.height, 3), dtype='uint8') + 20
 
@@ -117,16 +115,18 @@ class Pong_env(gym.Env):
     def get_done(self):
 
         done = False
+        Won = False
+        Lost = False
 
-        reward = 0
         if self.ball_x <= 0: 
-            reward = 10
+            Won = True
             done = True
+
         elif self.ball_x >= self.width - self.ball_size:
-            reward = -10
+            Lost = True
             done = True
         
-        return reward, done
+        return Won, Lost, done
     
     def get_paddle_collision(self):
 
@@ -172,7 +172,7 @@ class Pong_env(gym.Env):
 
     def get_ball_collisions(self):
             
-        reward = 0
+        ball_hit = False
 
         momentum_multiplier = 0.3
 
@@ -289,9 +289,9 @@ class Pong_env(gym.Env):
             self.ball_speed_y -= spin_induced_speed
             self.ball_speed_x += spin_induced_speed
 
-            reward = 1
+            ball_hit = True
 
-        return reward
+        return ball_hit
     
     def ball_spin_effect(self):
         current_angle = np.arctan2(self.ball_speed_y, self.ball_speed_x)
@@ -303,51 +303,63 @@ class Pong_env(gym.Env):
 
         self.ball_speed_x += additional_velocity * np.cos(new_angle)
         self.ball_speed_y += additional_velocity * np.sin(new_angle)
-  
-                
-    def step(self, action):
+
+    def get_reward(self, action, ball_hit, Won, Lost):
+        
+        reward = 0
 
         # movement = lower reward
         # this is to descourage rapid movement
         if action != 1:
-            self.reward -= 0.0001
+            reward -= 0.0001
+
+        if ball_hit:
+            reward += 0.2
+
+        if Won:
+            reward += 10
+        elif Lost:
+            reward -= 10
+
+        return reward
+    
+    def movement_handler(self):
 
         self.paddle1_speed *= 0.99
         self.paddle2_speed *= 0.99
 
-        self.take_action(action)
-
         self.paddle1_y += self.paddle1_speed
         self.paddle2_y += self.paddle2_speed
 
-        self.get_paddle_collision()
-
         self.ball_x += self.ball_speed_x
         self.ball_y += self.ball_speed_y
+                
+    def step(self, action):
 
-        #self.ball_speed_y += self.ball_spin * 0.01 * np.sign(self.ball_speed_x) 
+        self.take_action(action)
+
+        self.movement_handler()
+
+        self.get_paddle_collision()
+
         self.ball_spin_effect()
 
-        hit_reward = self.get_ball_collisions()
+        ball_hit = self.get_ball_collisions()
 
-        self.reward += hit_reward
+        Won, Lost, done = self.get_done()
 
-        win_reward, done = self.get_done()
-
-        self.reward += win_reward
+        reward = self.get_reward(action, ball_hit, Won, Lost)
 
         observation = self.get_observation()
 
         truncated = False
 
-        #info = {"action": action, "reward": self.reward}
-
-        info = {}
+        info = {"action": action, "reward": self.reward}
 
         if done:
             self.reset_game()
 
-        return observation, self.reward, done, truncated, info
+        return observation, reward, done, truncated, info
 
     def reset(self, seed=None, options=None):
 
@@ -390,13 +402,6 @@ class Pong_env(gym.Env):
 
 
         cv2.line(self.img, (start_x, start_y), (end_x, end_y), red, 2)
-
-        '''font = cv2.FONT_HERSHEY_SIMPLEX
-        text = f'X: {self.ball_speed_x:.2f}\nY: {self.ball_speed_y:.2f}\nSpin: {self.ball_spin:.2f}\ntotal: {abs(self.ball_speed_x)+abs(self.ball_speed_y)+abs(self.ball_spin):.2f}'
-        y0, dy = 30, 15
-        for i, line in enumerate(text.split('\n')):
-            y = y0 + i*dy
-            cv2.putText(self.img, line, (10, y), font, 0.5, gray, 1, cv2.LINE_AA)'''
 
         cv2.imshow("Pong", self.img)
         cv2.waitKey(1)

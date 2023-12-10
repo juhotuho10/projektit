@@ -6,14 +6,14 @@ import time
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 
-from Pong_play_env import Pong_env
+from Pong_train_env import Pong_train_env
 
 RENDER = True
 
 TIMESTEPS = 5_000
 version = 1
 
-env = Pong_env()
+env = Pong_train_env()
 env.reset()
 
 model_folder = "1702140034"

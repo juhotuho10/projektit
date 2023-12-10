@@ -6,7 +6,7 @@ import os
 import time
 
 from stable_baselines3 import PPO
-from Pong_train_env import Pong_env
+from Pong_train_env import Pong_train_env
 
 from stable_baselines3.common import results_plotter
 from stable_baselines3.common.monitor import Monitor
@@ -65,7 +65,7 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
 TIMESTEPS = 20_000
 version = 1
 
-env = Pong_env()
+env = Pong_train_env()
 env.reset()
 
 # Create log dir
@@ -73,7 +73,7 @@ log_dir = f"logs/Pong-{version}/{int(time.time())}/"
 
 os.makedirs(log_dir, exist_ok=True)
 
-# wrap the environment with a monitor that records a CSV for the save best agent function
+# wrap the environment with a monitor that records the agent rewards to keep track of the best agent
 env = Monitor(env, log_dir)
 
 # verbose and logging also in callbacks
