@@ -354,7 +354,7 @@ class Pong_play_env(gym.Env):
 
         truncated = False
 
-        info = {"action": action, "self.reward": self.reward}
+        info = {"action": action, "self.reward": self.reward, "p1_won": Lost, "p2_won": Won}
 
         return observation, self.reward, done, truncated, info
 
@@ -367,7 +367,7 @@ class Pong_play_env(gym.Env):
         info = {}
         return observation, info
 
-    def render(self):
+    def render(self, p1_score = 0, p2_score = 0):
         
         # Check for 'w' and 's' key presses
         if keyboard.is_pressed('w'):  # 'w' key for moving up
@@ -396,9 +396,21 @@ class Pong_play_env(gym.Env):
         start_y = int(self.ball_y + line_length * math.sin(self.ball_spin_angle))
         end_x = int(self.ball_x - line_length * math.cos(self.ball_spin_angle))
         end_y = int(self.ball_y - line_length * math.sin(self.ball_spin_angle))
-
-
         cv2.line(self.img, (start_x, start_y), (end_x, end_y), red, 2)
+
+
+
+        # Render the scores at the top middle of the screen
+
+        font_scale = 0.5
+        thickness = 1
+        
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        score_text = f'Score: {p1_score} - {p2_score}'
+        text_size = cv2.getTextSize(score_text, font, font_scale, thickness)[0]
+        text_x = (self.width - text_size[0]) // 2
+        text_y = text_size[1] + 20
+        cv2.putText(self.img, score_text, (text_x, text_y), font, font_scale, white, thickness)
 
         cv2.imshow("Pong", self.img)
         cv2.waitKey(1)

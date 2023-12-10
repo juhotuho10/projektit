@@ -27,6 +27,9 @@ obs, _ = env.reset()
 
 done_count = 0
 
+p1_score = 0
+p2_score = 0
+
 # while loop has to be here since for loop would only render x amount of steps
 # but a while loop checks how many times the environment is completed
 while done_count <= 100:
@@ -38,8 +41,11 @@ while done_count <= 100:
     #print(obs)
 
     if RENDER:
-        env.render()
+        env.render(p1_score, p2_score)
 
     if done:
+        p1_score += info["p1_won"]
+        p2_score += info["p2_won"]
+
         obs, _ = env.reset()
         done_count += 1
