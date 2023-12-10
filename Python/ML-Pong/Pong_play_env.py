@@ -5,6 +5,7 @@ import cv2
 import math
 import random
 import keyboard
+import time
 
 black = (0,0,0)
 white = (255,255,255)
@@ -45,7 +46,7 @@ class Pong_play_env(gym.Env):
         self.ball_radius = self.ball_size / 2
 
         self.paddle_acceleration1 = 1
-        self.paddle_acceleration2 = 5
+        self.paddle_acceleration2 = 1
 
         self.reset_game()
 
@@ -167,11 +168,11 @@ class Pong_play_env(gym.Env):
         self.ball_speed_x += np.sign(self.ball_speed_x) * (abs(self.ball_spin * spin_transfer_ratio) + abs(self.ball_speed_y * y_transfer_ratio))
 
 
-    def add_momentum(self, amount = 1.06):
+    def add_momentum(self, amount = 1.15):
         # adds momentum so the ball consistenly gets faster
-        self.ball_spin *= amount
+        #self.ball_spin *= amount
         self.ball_speed_x *= amount
-        self.ball_speed_y *= amount
+        #self.ball_speed_y *= amount
 
         self.ball_spin = np.clip(self.ball_spin, -15, 15)
         self.ball_speed_x = np.clip(self.ball_speed_x, -15, 15)
@@ -262,7 +263,7 @@ class Pong_play_env(gym.Env):
             self.ball_speed_y *= 1 - momentum_multiplier
             self.ball_spin *= 1 - momentum_multiplier
 
-            self.ball_spin -= speed_induced_spin
+            self.ball_spin = speed_induced_spin
 
             self.ball_speed_y -= spin_induced_speed
             self.ball_speed_x += spin_induced_speed
@@ -292,7 +293,7 @@ class Pong_play_env(gym.Env):
             self.ball_speed_y *= 1 - momentum_multiplier
             self.ball_spin *= 1 - momentum_multiplier
 
-            self.ball_spin -= speed_induced_spin
+            self.ball_spin = speed_induced_spin
 
             self.ball_speed_y -= spin_induced_speed
             self.ball_speed_x += spin_induced_speed
@@ -397,8 +398,6 @@ class Pong_play_env(gym.Env):
         end_x = int(self.ball_x - line_length * math.cos(self.ball_spin_angle))
         end_y = int(self.ball_y - line_length * math.sin(self.ball_spin_angle))
         cv2.line(self.img, (start_x, start_y), (end_x, end_y), red, 2)
-
-
 
         # Render the scores at the top middle of the screen
 

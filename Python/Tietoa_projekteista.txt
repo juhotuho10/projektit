@@ -87,7 +87,32 @@ ML-pong:
 
    Ideana on, että pystyt pelaamaan kyseistä pong peliä ML mallia vastaan ja peli pitää scorea, montako kertaa kumpikin on saanut pointin
 
+   pelaamis ohjeet: 
+   Avaa ja aja Pong_loading.py
+
+   ohjaus näppäimet:
+      w = ylös
+      s = alas
+
+
+   ML mallin näkösignaalit:
+
+   pallon_y ero lastan keskikohdasta normalisoituna
+   lastan y normalisoituna
+   pallon x normalisoituna
+   pallon y normalisoituna
+   pallon x nopeus normalisoituna
+   pallon y nopeus normalisoituna
+
+   rewardit:
+   + pallo osuu omaan lastaan
+   + saa pisteen
+   - vihollinen saa pisteen
+
+
    
+
+
    
 
 
