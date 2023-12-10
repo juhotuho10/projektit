@@ -24,19 +24,20 @@ class Pong_play_env(gym.Env):
         super().__init__()
 
         # Define action and observation space
-        # They must be gym.spaces objects
-        # Example when using discrete actions:
         self.action_space = spaces.Discrete(3)
-        # Example for using image as input (channel-first; channel-last also works):
-        self.observation_space = spaces.Box(low=0, high=255, shape=(7,), dtype=np.float16)
 
+        self.observation_space = spaces.Box(low=0, high=255, shape=(6,), dtype=np.float16)
+
+        # window sizes
         self.width = 600
         self.height = 400
 
         self.paddle_width = 4
 
+        # paddle X from the wall
         self.paddle_x = 30
 
+        # precalculated surface X for both paddles
         self.paddle1_suface = self.paddle_x + self.paddle_width
         self.paddle2_suface = self.width - self.paddle_x 
 
@@ -50,6 +51,8 @@ class Pong_play_env(gym.Env):
 
 
     def reset_game(self):
+
+        self.reward = 0
 
         self.paddle1_height = 80
         self.paddle2_height = 80
@@ -70,8 +73,6 @@ class Pong_play_env(gym.Env):
         
         # ball outer surface spin speed
         # positive means clockwise spin
-        #self.ball_spin = random.uniform(-5, 5)
-
         self.ball_spin = random.uniform(-10, 10)
         self.ball_spin_angle = 0
 
@@ -100,15 +101,16 @@ class Pong_play_env(gym.Env):
 
     def get_observation(self):
 
-        abs_y = self.paddle2_y / self.height
+        paddle2_center = self.paddle2_y + self.paddle2_height / 2
 
-        relative_y = (self.paddle2_y - self.ball_y) / self.height
-
-        relative_ball_x = self.ball_x / (self.width - self.paddle_x)
-
-        ball_direction = self.ball_speed_x > 0
-
-        observation = [abs_y, relative_y, self.paddle2_speed, relative_ball_x, ball_direction, self.ball_speed_y, self.ball_spin]
+        observation = [
+            (paddle2_center - self.ball_y) / self.height,
+            paddle2_center / self.height,  
+            self.ball_x / self.width,      
+            self.ball_y / self.height,     
+            self.ball_speed_x / 15,        
+            self.ball_speed_y / 15         
+        ]
 
         return np.array(observation)
 
@@ -122,7 +124,7 @@ class Pong_play_env(gym.Env):
             Won = True
             done = True
 
-        elif self.ball_x >= self.width - self.ball_size:
+        elif self.ball_x >= self.width:
             Lost = True
             done = True
         
@@ -130,23 +132,29 @@ class Pong_play_env(gym.Env):
     
     def get_paddle_collision(self):
 
+        # left paddle collides with upper wall
         if self.paddle1_y <= 0:
             self.paddle1_y = 0
             self.paddle1_speed = -self.paddle1_speed * 0.5
 
+        # left paddle collides with lower wall
         elif self.paddle1_y + self.paddle1_height >= self.height:
             self.paddle1_y = self.height - self.paddle1_height
             self.paddle1_speed = -self.paddle1_speed * 0.5
 
+        # right paddle collides with upper wall
         if self.paddle2_y <= 0:
             self.paddle2_y = 0
             self.paddle2_speed = -self.paddle2_speed * 0.5
 
+        # right paddle collides with lower wall
         elif self.paddle2_y + self.paddle2_height >= self.height:
             self.paddle2_y = self.height - self.paddle2_height
             self.paddle2_speed = -self.paddle2_speed * 0.5
 
     def random_momentum_transfer(self):
+
+        # this function is there to prevent the ball from getting stuck bouncing up and down
 
         if abs(self.ball_speed_x) > 1:
             return
@@ -156,11 +164,11 @@ class Pong_play_env(gym.Env):
         y_transfer_ratio = random.uniform(0.1, 0.3)
 
         # np sign turns into poositive or negative 1
-        #print(np.sign(self.ball_speed_x) * abs(self.ball_spin * spin_transfer_ratio) + abs(self.ball_speed_y * y_transfer_ratio))
         self.ball_speed_x += np.sign(self.ball_speed_x) * (abs(self.ball_spin * spin_transfer_ratio) + abs(self.ball_speed_y * y_transfer_ratio))
 
 
     def add_momentum(self, amount = 1.06):
+        # adds momentum so the ball consistenly gets faster
         self.ball_spin *= amount
         self.ball_speed_x *= amount
         self.ball_speed_y *= amount
@@ -232,7 +240,7 @@ class Pong_play_env(gym.Env):
 
         # Ball collision with left paddle
         if ball_left_surface <= self.paddle1_suface and \
-            self.ball_x >= self.paddle1_suface and \
+            ball_right_surface >= self.paddle1_suface and \
             self.ball_y >= self.paddle1_y and \
             self.ball_y <= self.paddle1_y + self.paddle1_height:
             
@@ -262,7 +270,7 @@ class Pong_play_env(gym.Env):
 
         # Ball collision with right paddle
         if ball_right_surface >= self.paddle2_suface and \
-            self.ball_x <= self.paddle2_suface and \
+            ball_left_surface <= self.paddle2_suface and \
             self.ball_y >= self.paddle2_y and \
             self.ball_y <= self.paddle2_y + self.paddle2_height:
 
@@ -294,6 +302,7 @@ class Pong_play_env(gym.Env):
         return ball_hit
     
     def ball_spin_effect(self):
+        # ball curves to the direction of the spin
         current_angle = np.arctan2(self.ball_speed_y, self.ball_speed_x)
 
         spin_direction = np.pi / 2 if self.ball_spin > 0 else -np.pi / 2
@@ -306,22 +315,13 @@ class Pong_play_env(gym.Env):
 
     def get_reward(self, action, ball_hit, Won, Lost):
         
-        reward = 0
-
-        # movement = lower reward
-        # this is to descourage rapid movement
-        if action != 1:
-            reward -= 0.0001
-
+        self.reward = 0
         if ball_hit:
-            reward += 0.2
-
+            self.reward += 1
         if Won:
-            reward += 10
+            self.reward += 10 
         elif Lost:
-            reward -= 10
-
-        return reward
+            self.reward -= 10
     
     def movement_handler(self):
 
@@ -335,7 +335,7 @@ class Pong_play_env(gym.Env):
         self.ball_y += self.ball_speed_y
                 
     def step(self, action):
-
+        # main stepping function
         self.take_action(action)
 
         self.movement_handler()
@@ -348,18 +348,15 @@ class Pong_play_env(gym.Env):
 
         Won, Lost, done = self.get_done()
 
-        reward = self.get_reward(action, ball_hit, Won, Lost)
+        self.get_reward(action, ball_hit, Won, Lost)
 
         observation = self.get_observation()
 
         truncated = False
 
-        info = {"action": action, "reward": self.reward}
+        info = {"action": action, "self.reward": self.reward}
 
-        if done:
-            self.reset_game()
-
-        return observation, reward, done, truncated, info
+        return observation, self.reward, done, truncated, info
 
     def reset(self, seed=None, options=None):
 
