@@ -1,12 +1,37 @@
 from game2048 import Game2048
 
 import numpy as np
+from keras.models import Model
+from keras.layers import Input, Dense, Conv2D, Flatten, Concatenate
 
 game = Game2048()
 
 print(game.get_board())
 game.move_board("left")
 print(game.get_board())
+
+def create_model():
+    # model that takes in both the game grid into the CNN layers as well as other data about the game
+    # the CNN layer and the dense layer concatinate halfway down the model
+    # this is done because the other features arent spacially related to the game grid so they arent fed through the CNN
+    grid_input = Input(shape=(4, 4, 1)) 
+    cnn = Conv2D(filters=64, kernel_size=(2, 2), activation='relu')(grid_input)
+    cnn = Flatten()(cnn)
+
+    features_input = Input(shape=(5,))
+    dense = Dense(units=64, activation='relu')(features_input)
+
+    combined = Concatenate()([cnn, dense])
+
+    combined = Dense(units=128, activation='relu')(combined)
+    combined = Dense(units=64, activation='relu')(combined)
+    combined = Dense(units=32, activation='relu')(combined)
+
+    output = Dense(units=1, activation='sigmoid')(combined)
+
+    model = Model(inputs=[grid_input, features_input], outputs=output)
+
+    return model
 
 def get_data():
     board = np.array(game.get_board())
@@ -24,10 +49,7 @@ def get_data():
 
     other_data = np.array([empty_count, max_num_count, max_mergeable, valid_move_count, max_value_score])
 
-    return board, 
-
-
-
+    return board, other_data
 
 def count_mergeable_tiles():
     board = game.get_board()
