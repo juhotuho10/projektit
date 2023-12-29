@@ -1,5 +1,5 @@
 from game2048 import Game2048
-
+import torch.optim as optim
 import numpy as np
 import torch
 import torch.nn as nn
@@ -157,15 +157,73 @@ def get_max_value_score():
     else:
         return 0
 
+def predict(grid_input, features_input):
+    with torch.no_grad():  # Disable gradient computation
+        grid_input = torch.from_numpy(grid_input)
+        features_input = torch.from_numpy(features_input)
+        
+        predicted_value = model(grid_input, features_input)
+        print(f"Predicted Value: {predicted_value.item()}")
+
 # Example model predictions for each sample
 model = DualInputModel()
 model.eval()  # Set the model to evaluation mode
 
-with torch.no_grad():  # Disable gradient computation
-    grid_input, features_input = get_data()
+def generate_dataset(num_samples=1000):
+    x_grid_list = []
+    x_features_list = []
+    y_list = []
 
-    grid_input = torch.from_numpy(grid_input)
-    features_input = torch.from_numpy(features_input)
-    
-    predicted_value = model(grid_input, features_input)
-    print(f"Predicted Value: {predicted_value.item()}")
+    for _ in range(num_samples):
+        grid_data, feature_data = get_data()
+        label = 1  # Random float between 0 and 1
+
+        x_grid_list.append(grid_data[0])
+        x_features_list.append(feature_data[0])
+        y_list.append(label)
+
+    # Convert lists to NumPy arrays
+    x_grid = np.array(x_grid_list, dtype=np.float32)
+    x_features = np.array(x_features_list, dtype=np.float32)
+    y = np.array(y_list, dtype=np.float32)
+
+    return x_grid, x_features, y
+
+# Generate the dataset
+x_train_grid, x_train_features, y_train = generate_dataset(1000)
+
+# Convert to PyTorch tensors
+x_train_grid = torch.from_numpy(x_train_grid)
+x_train_features = torch.from_numpy(x_train_features)
+y_train = torch.from_numpy(y_train)
+
+# Create the model
+model = DualInputModel()
+
+# Define loss function and optimizer
+criterion = nn.BCELoss()  # Binary Cross-Entropy Loss for binary classification
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+# Training loop
+num_epochs = 10
+batch_size = 64
+
+for epoch in range(num_epochs):
+    for i in range(0, len(x_train_grid), batch_size):
+        # Get the mini-batch
+        batch_grid = x_train_grid[i:i+batch_size]
+        batch_features = x_train_features[i:i+batch_size]
+        batch_labels = y_train[i:i+batch_size]
+
+        # Zero the parameter gradients
+        optimizer.zero_grad()
+
+        # Forward pass
+        outputs = model(batch_grid, batch_features)
+        loss = criterion(outputs.squeeze(), batch_labels)
+
+        # Backward pass and optimize
+        loss.backward()
+        optimizer.step()
+
+    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
