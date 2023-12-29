@@ -15,7 +15,7 @@ class Game2048:
         empty_tiles = [(i, j) for i in range(self.size) for j in range(self.size) if self.board[i][j] == 0]
         if empty_tiles:
             i, j = random.choice(empty_tiles)
-            self.board[i][j] = random.choice([1, 2])
+            self.board[i][j] = random.choice([2, 4])
 
     def compress(self, grid):
         new_grid = np.zeros_like(grid)
@@ -31,7 +31,7 @@ class Game2048:
         for i in range(grid.shape[0]):
             for j in range(grid.shape[1]-1):
                 if grid[i][j] == grid[i][j+1]:
-                    grid[i][j] += 1
+                    grid[i][j] *= 2
                     grid[i][j+1] = 0
         return grid
 
@@ -42,7 +42,6 @@ class Game2048:
         return np.transpose(grid)
     
     def move(self, direction):
-        assert direction in ["left", "right", "up", "down"]
 
         match direction:
             case "left":
@@ -67,12 +66,14 @@ class Game2048:
 
 
     def move_board(self, direction):
-        assert not self.is_game_over()
+        assert direction in ["left", "right", "up", "down"]
         assert self.move_is_valid(direction)
 
         self.move(direction)
 
         self.add_new_tile()
+
+        assert not self.is_game_over()
 
           
     def is_game_over(self):
@@ -85,38 +86,13 @@ class Game2048:
         return True
     
     def move_is_valid(self, direction):
-        temp_board = np.copy(self.board)
-        self.move(direction)
-        is_valid = not np.array_equal(temp_board, self.board)
+        temp_game = Game2048()
+        temp_game.board = np.copy(self.board)
+        temp_game.move(direction)
+        is_valid = not np.array_equal(temp_game.board, self.board)
 
         return is_valid
+    
 
     def get_board(self):
         return self.board
-
-game = Game2048()
-print(game.get_board())
-
-game.move_board("left")
-print(game.get_board())
-
-game.move_board("down")
-print(game.get_board())
-
-game.move_board("right")
-print(game.get_board())
-
-game.move_board("up")
-print(game.get_board())
-
-game.move_board("left")
-print(game.get_board())
-
-game.move_board("down")
-print(game.get_board())
-
-game.move_board("right")
-print(game.get_board())
-
-game.move_board("up")
-print(game.get_board())
