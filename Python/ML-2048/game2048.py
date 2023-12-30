@@ -67,14 +67,10 @@ class Game2048:
 
     def move_board(self, direction):
         assert direction in ["left", "right", "up", "down"]
-        assert self.move_is_valid(direction)
 
         self.move(direction)
 
         self.add_new_tile()
-
-        assert not self.is_game_over()
-
           
     def is_game_over(self):
         if any(0 in row for row in self.board):
@@ -92,6 +88,13 @@ class Game2048:
         is_valid = not np.array_equal(temp_game.board, self.board)
 
         return is_valid
+    
+    def board_from_move(self, direction):
+        temp_game = Game2048()
+        temp_game.board = np.copy(self.board)
+        temp_game.move_board(direction)
+
+        return temp_game.get_board()
     
 
     def get_board(self):
