@@ -18,18 +18,22 @@ class Game2048:
             self.board[i][j] = random.choice([2, 4])
 
     def compress(self, grid):
-        new_grid = np.zeros_like(grid)
-        for i in range(grid.shape[0]):
-            position = 0
-            for j in range(grid.shape[1]):
-                if grid[i][j] != 0:
-                    new_grid[i][position] = grid[i][j]
-                    position += 1
-        return new_grid
+
+        for i in range(4):
+            line = grid[i]
+            line = line[line != 0]
+
+            pad_len = 4 - len(line)
+
+            line = np.pad(line, (0, pad_len), 'constant')
+
+            grid[i] = line
+
+        return grid
 
     def merge(self, grid):
-        for i in range(grid.shape[0]):
-            for j in range(grid.shape[1]-1):
+        for i in range(4):
+            for j in range(3):
                 if grid[i][j] == grid[i][j+1]:
                     grid[i][j] *= 2
                     grid[i][j+1] = 0
