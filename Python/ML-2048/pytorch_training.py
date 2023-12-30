@@ -64,12 +64,11 @@ class DualInputModel(nn.Module):
 
         return output
 
-
 def get_data(curr_board: np.ndarray):
 
     # taking a log2 of the board, so 0 = 0, 2 = 1, 4 = 2, 8 = 3 etc...
-    log_board = np.where(curr_board != 0, np.log2(curr_board), 0).astype(np.float32)
-    
+    log_board = np.log2(curr_board, where=curr_board != 0).astype(np.float32)
+
     empty_count = sum(curr_board.flatten() == 0) / 16
 
     max_num_count = np.sum(curr_board == np.max(curr_board))
@@ -83,7 +82,8 @@ def get_data(curr_board: np.ndarray):
     max_value_score = get_max_value_score(curr_board)
 
     # Ensure the grid_input has the correct shape
-    log_board = np.expand_dims(log_board, axis=0) 
+    #log_board = np.expand_dims(log_board, axis=0) 
+    log_board = np.array([log_board])
 
     other_data = np.array([empty_count, max_num_count, max_mergeable, valid_move_count, max_value_score], dtype=np.float32)
     return log_board, other_data
@@ -174,29 +174,45 @@ def predict(pred_model, grid_input, features_input):
 
         return predicted_value
     
+
+def generate_rewards(moves_taken):
+    rewards = []
+    moves_taken 
+    return rewards
+    
 def gather_data(pred_model):
+    memory = ReplayBuffer(1000)
+
     for _ in range(100):
         game = Game2048()
-        done = False
+        moves_taken = []
+        boards_taken = []
         while True:
             curr_board = game.get_board()
             mergeable_rows, mergeable_cols = count_mergeable_tiles(curr_board)
             valid_moves = get_valid_moves(curr_board, mergeable_rows, mergeable_cols)
 
             if not valid_moves:
+                print(curr_board)
                 print("game done")
                 break
 
             boards_after_moves = []
+            tiles_after_moves = []
             for move in valid_moves:
-                nwe_board = game.board_from_move(move)
-                boards_after_moves.append(nwe_board)
+                new_board, new_tile = game.board_from_move(move)
+                boards_after_moves.append(new_board)
+                tiles_after_moves.append(new_tile)
 
             board_data_list = []
             feature_data_list = []
 
             for board in boards_after_moves:
                 log_board, other_data = get_data(board)
+                temp_board = 2**log_board
+                temp_board[temp_board == 1] = 0
+                temp_board = temp_board.astype(int)
+    
                 board_data_list.append(log_board)
                 feature_data_list.append(other_data)
 
@@ -207,10 +223,26 @@ def gather_data(pred_model):
 
             max_index = np.argmax(predicted_scores)
 
-            best_move = valid_moves[max_index]
+            fake_move = boards_after_moves[max_index]
 
-            game.move_board(best_move)
-                    
+            best_move = valid_moves[max_index]
+            set_tile = tiles_after_moves[max_index]
+
+            game.move_board(best_move, set_tile)
+
+            if not np.array_equal(game.get_board(), fake_move):
+                print(fake_move)
+                print(game.get_board())
+                print()
+                assert False
+
+            boards_taken.append(game.get_board())
+
+            taken_board_data = board_data_list[max_index]
+            taken_feature_data = feature_data_list[max_index]
+
+            moves_taken.append([taken_board_data, taken_feature_data])
+        
 
 # Example model predictions for each sample
 model = DualInputModel()
@@ -225,7 +257,7 @@ def generate_dataset(num_samples=1000):
 
     for _ in range(num_samples):
         grid_data, feature_data = get_data()
-        label = 1  # Random float between 0 and 1
+        label = 1  
         x_grid_list.append(grid_data)
         x_features_list.append(feature_data)
         y_list.append(label)
