@@ -15,20 +15,12 @@ class Game2048:
 
     
     def add_new_tile(self):
-
-        new_tile = []
-
         zero_coords = np.where(self.board == 0)
         zero_coord_tuples = list(zip(zero_coords[0], zero_coords[1]))
         if zero_coord_tuples:
             i, j = random.choice(zero_coord_tuples)
-            num_coice = random.choice([2, 4])
-            self.board[i, j] = num_coice
-            new_tile = [[i, j], num_coice]
+            self.board[i, j] = random.choice([2, 4])
 
-        return new_tile
-    
-    
     def set_new_tile(self, tile):
         if tile:
             i, j = tile[0]
@@ -82,17 +74,10 @@ class Game2048:
                 self.board = self.transpose(self.board)
 
 
-    def move_board(self, direction, set_tile):
+    def move_board(self, direction):
         assert direction in ["left", "right", "up", "down"]
-
         self.move(direction)
-        self.set_new_tile(set_tile)
-
-    def fake_move(self, direction):
-
-        self.move(direction)
-        new_tile = self.add_new_tile()
-        return new_tile
+        self.add_new_tile()
     
         
     def is_game_over(self):
@@ -115,9 +100,9 @@ class Game2048:
     def board_from_move(self, direction):
         temp_game = Game2048()
         temp_game.board = np.copy(self.get_board())
-        new_tile = temp_game.fake_move(direction)
+        temp_game.move_board(direction)
 
-        return temp_game.get_board(), new_tile
+        return temp_game.get_board()
     
 
     def get_board(self):

@@ -198,11 +198,9 @@ def gather_data(pred_model):
                 break
 
             boards_after_moves = []
-            tiles_after_moves = []
             for move in valid_moves:
-                new_board, new_tile = game.board_from_move(move)
+                new_board = game.board_from_move(move)
                 boards_after_moves.append(new_board)
-                tiles_after_moves.append(new_tile)
 
             board_data_list = []
             feature_data_list = []
@@ -223,15 +221,13 @@ def gather_data(pred_model):
 
             max_index = np.argmax(predicted_scores)
 
-            fake_move = boards_after_moves[max_index]
+            chosen_board = boards_after_moves[max_index]
 
-            best_move = valid_moves[max_index]
-            set_tile = tiles_after_moves[max_index]
+            game.board = np.copy(chosen_board)
 
-            game.move_board(best_move, set_tile)
 
-            if not np.array_equal(game.get_board(), fake_move):
-                print(fake_move)
+            if not np.array_equal(game.get_board(), chosen_board):
+                print(chosen_board)
                 print(game.get_board())
                 print()
                 assert False
