@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import random
 
 # makes a replay memory with all the moves that have happened
 class ReplayBuffer():
@@ -22,7 +23,8 @@ class ReplayBuffer():
     # grabs the memory
     def sample(self):
         state, reward = zip(*self.buffer)
-        return np.stack(state), np.array(reward)
+        self.buffer = []
+        return state, reward
 
 class DualInputModel(nn.Module):
     def __init__(self):
@@ -65,9 +67,16 @@ class DualInputModel(nn.Module):
         return output
 
 def get_data(curr_board: np.ndarray):
-
+    curr_board = curr_board.astype(np.int32)
     # taking a log2 of the board, so 0 = 0, 2 = 1, 4 = 2, 8 = 3 etc...
-    log_board = np.log2(curr_board, where=curr_board != 0).astype(np.float32)
+    #log_board = np.log2(curr_board, where=curr_board >= 0.5).astype(np.int32)
+
+    log_board = np.where(curr_board >= 0.9, np.log2(curr_board), 0).astype(np.int32)
+
+    if np.max(log_board) > 15:
+        print(curr_board)
+        print(log_board)
+        assert False
 
     empty_count = sum(curr_board.flatten() == 0) / 16
 
@@ -171,74 +180,152 @@ def predict(pred_model, grid_input, features_input):
         features_input = torch.from_numpy(features_input)
         
         predicted_value = pred_model(grid_input, features_input)
-
         return predicted_value
     
+def data_from_boards(boards_after_moves):
+    board_data_list = []
+    feature_data_list = []
+
+    for board in boards_after_moves:
+        log_board, other_data = get_data(board)
+
+        board_data_list.append(log_board)
+        feature_data_list.append(other_data)
+
+    board_data_list = np.array(board_data_list, dtype=np.float32)
+    feature_data_list = np.array(feature_data_list, dtype=np.float32)
+
+    return board_data_list, feature_data_list
+
 
 def generate_rewards(moves_taken):
-    rewards = []
-    moves_taken 
-    return rewards
+    all_rewards = []
+    returned_moves = []
+
+    end_moves = []
+    for i, move in enumerate(reversed(moves_taken)):
+        move_board = move[0]
+        if np.any(move_board == 0) or i >= 5:
+            break
+        end_moves.append(move)
+
+    end_moves = end_moves[::-1]
+
+    bad_rewards = [0.5 ** (i+1) for i in range(len(end_moves))]
+    bad_rewards[0] = 0
+
+    good_state = int(len(moves_taken) / 2)
+    count = len(bad_rewards)
+    healthy_moves = random.choices(moves_taken[:good_state], k=count)
+    good_rewards = [1 for _ in healthy_moves]
+
+    returned_moves.extend(healthy_moves)
+    all_rewards.extend(good_rewards)
+
+    returned_moves.extend(end_moves)
+    all_rewards.extend(bad_rewards)
+
+    assert len(returned_moves) == len(all_rewards)
+
+    return returned_moves, all_rewards
     
 def gather_data(pred_model):
     memory = ReplayBuffer(1000)
 
-    for _ in range(100):
-        game = Game2048()
-        moves_taken = []
-        boards_taken = []
-        while True:
-            curr_board = game.get_board()
-            mergeable_rows, mergeable_cols = count_mergeable_tiles(curr_board)
-            valid_moves = get_valid_moves(curr_board, mergeable_rows, mergeable_cols)
+    while True:
+        for _ in range(10):
+            game = Game2048()
+            moves_taken = []
+            boards_taken = []
+            while True:
+                curr_board = game.get_board()
+                mergeable_rows, mergeable_cols = count_mergeable_tiles(curr_board)
+                valid_moves = get_valid_moves(curr_board, mergeable_rows, mergeable_cols)
 
-            if not valid_moves:
-                print(curr_board)
-                print("game done")
-                break
+                if not valid_moves:
+                    break
 
-            boards_after_moves = []
-            for move in valid_moves:
-                new_board = game.board_from_move(move)
-                boards_after_moves.append(new_board)
+                boards_after_moves = [game.board_from_move(move) for move in valid_moves]
+                
+                board_data_list, feature_data_list = data_from_boards(boards_after_moves)
 
-            board_data_list = []
-            feature_data_list = []
+                predicted_scores = predict(pred_model, board_data_list, feature_data_list)
 
-            for board in boards_after_moves:
-                log_board, other_data = get_data(board)
-                temp_board = 2**log_board
-                temp_board[temp_board == 1] = 0
-                temp_board = temp_board.astype(int)
-    
-                board_data_list.append(log_board)
-                feature_data_list.append(other_data)
+                max_index = np.argmax(predicted_scores)
 
-            board_data_list = np.array(board_data_list, dtype=np.float32)
-            feature_data_list = np.array(feature_data_list, dtype=np.float32)
+                chosen_board = boards_after_moves[max_index]
 
-            predicted_scores = predict(pred_model, board_data_list, feature_data_list)
+                game.board = np.copy(chosen_board)
 
-            max_index = np.argmax(predicted_scores)
+                assert np.array_equal(game.get_board(), chosen_board)
 
-            chosen_board = boards_after_moves[max_index]
+                boards_taken.append(chosen_board)
 
-            game.board = np.copy(chosen_board)
+                taken_board_data = board_data_list[max_index]
+                taken_feature_data = feature_data_list[max_index]
 
+                moves_taken.append([taken_board_data, taken_feature_data])
 
-            if not np.array_equal(game.get_board(), chosen_board):
-                print(chosen_board)
-                print(game.get_board())
-                print()
-                assert False
+            moves, rewards = generate_rewards(moves_taken)
 
-            boards_taken.append(game.get_board())
+            for move, reward in zip(moves, rewards):
+                memory.push(move, reward)
 
-            taken_board_data = board_data_list[max_index]
-            taken_feature_data = feature_data_list[max_index]
+        states, rewards = memory.sample()
 
-            moves_taken.append([taken_board_data, taken_feature_data])
+        board_data, other_data = zip(*states)
+
+        board_data = np.array(board_data, dtype=np.float32)
+        other_data = np.array(other_data, dtype=np.float32)
+        rewards = np.array(rewards, dtype=np.float32)
+
+        print(2 ** np.max(board_data))
         
+        best_board = np.argmax([np.max(i) for i in board_data])
+        print(2 ** board_data[best_board])
+
+        print()
+
+        train_model(pred_model, board_data, other_data, rewards, epochs=100, batch_size=64)
+
+def train_model(model, board_data, other_data, rewards, epochs, batch_size):
+    # Set the model to training mode
+    model.train()
+
+    # Convert to PyTorch tensors
+    board_data = torch.from_numpy(board_data)
+    other_data = torch.from_numpy(other_data)
+    rewards = torch.from_numpy(rewards)
+
+    # Define the optimizer and the loss function
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    criterion = nn.BCELoss()
+
+    for epoch in range(epochs):
+        total_loss = 0
+
+        for i in range(0, len(board_data), batch_size):
+            # Get the mini-batch
+            batch_grid = board_data[i:i+batch_size]
+            batch_features = other_data[i:i+batch_size]
+            batch_labels = rewards[i:i+batch_size]
+
+            # Zero the parameter gradients
+            optimizer.zero_grad()
+
+            # Forward pass
+            outputs = model(batch_grid, batch_features)
+            loss = criterion(outputs.squeeze(), batch_labels)
+
+            # Backward pass and optimize
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item()
+
+        #average_loss = total_loss / (len(board_data) // batch_size)
+        #print(f'Epoch [{epoch+1}/{epochs}], Loss: {average_loss:.4f}')
+
 
 # Example model predictions for each sample
 model = DualInputModel()

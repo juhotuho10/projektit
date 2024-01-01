@@ -11,8 +11,6 @@ class Game2048:
         self.board = np.zeros((self.size, self.size), dtype=int)
         self.add_new_tile()
         self.add_new_tile()
-
-
     
     def add_new_tile(self):
         zero_coords = np.where(self.board == 0)
