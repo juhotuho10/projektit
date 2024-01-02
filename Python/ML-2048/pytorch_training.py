@@ -13,6 +13,9 @@ class ReplayBuffer():
     def __init__(self, capacity):
         self.capacity = capacity
         self.buffer = []
+
+    def is_full(self):
+        return len(self.buffer) == self.capacity
     
     #appends to the memory
     def push(self, state, reward):
@@ -201,13 +204,11 @@ def data_from_boards(boards_after_moves):
 
 def board_reward(board):
 
-    empty_rew = 1.04729
-
     max_num_reward = np.max(board)
 
     empty_spots = np.sum(board == 0)
 
-    empty_spot_reward = empty_rew ** empty_spots
+    empty_spot_reward = (empty_spots / 10) + 0.1
 
     total_reward = max_num_reward * empty_spot_reward
 
@@ -242,7 +243,7 @@ def gather_data(pred_model):
 
     while True:
         start = pc()
-        for _ in range(10):
+        while not memory.is_full():
             game = Game2048()
             moves_taken = []
             boards_taken = []
@@ -274,8 +275,6 @@ def gather_data(pred_model):
                 taken_feature_data = feature_data_list[max_index]
 
                 moves_taken.append([taken_board_data, taken_feature_data])
-
-            
 
             rewards = generate_rewards(game, moves_taken)
 
