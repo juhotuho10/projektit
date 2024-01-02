@@ -6,6 +6,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import random
 
+from time import perf_counter as pc
+
 # makes a replay memory with all the moves that have happened
 class ReplayBuffer():
     def __init__(self, capacity):
@@ -62,16 +64,16 @@ class DualInputModel(nn.Module):
         combined = F.relu(self.fc1(combined))
         combined = F.relu(self.fc2(combined))
         combined = F.relu(self.fc3(combined))
-        output = F.sigmoid(self.output(combined))
+        output = self.output(combined)
 
         return output
 
 def get_data(curr_board: np.ndarray):
-    curr_board = curr_board.astype(np.int32)
-    # taking a log2 of the board, so 0 = 0, 2 = 1, 4 = 2, 8 = 3 etc...
-    #log_board = np.log2(curr_board, where=curr_board >= 0.5).astype(np.int32)
 
-    log_board = np.where(curr_board >= 0.9, np.log2(curr_board), 0).astype(np.int32)
+    curr_board = curr_board.astype(int)
+    # taking a log2 of the board, so 0 = 0, 2 = 1, 4 = 2, 8 = 3 etc...
+
+    log_board = np.where(curr_board > 0.9, np.log2(curr_board, where=curr_board > 0.9), 0).astype(np.int32)
 
     if np.max(log_board) > 15:
         print(curr_board)
@@ -197,42 +199,49 @@ def data_from_boards(boards_after_moves):
 
     return board_data_list, feature_data_list
 
+def board_reward(board):
 
-def generate_rewards(moves_taken):
-    all_rewards = []
-    returned_moves = []
+    empty_rew = 1.04729
 
-    end_moves = []
-    for i, move in enumerate(reversed(moves_taken)):
-        move_board = move[0]
-        if np.any(move_board == 0) or i >= 5:
-            break
-        end_moves.append(move)
+    max_num_reward = np.max(board)
 
-    end_moves = end_moves[::-1]
+    empty_spots = np.sum(board == 0)
 
-    bad_rewards = [0.5 ** (i+1) for i in range(len(end_moves))]
-    bad_rewards[0] = 0
+    empty_spot_reward = empty_rew ** empty_spots
 
-    good_state = int(len(moves_taken) / 2)
-    count = len(bad_rewards)
-    healthy_moves = random.choices(moves_taken[:good_state], k=count)
-    good_rewards = [1 for _ in healthy_moves]
+    total_reward = max_num_reward * empty_spot_reward
 
-    returned_moves.extend(healthy_moves)
-    all_rewards.extend(good_rewards)
+    return total_reward
 
-    returned_moves.extend(end_moves)
-    all_rewards.extend(bad_rewards)
+def best_board_reward(game, curr_board):
+    mergeable_rows, mergeable_cols = count_mergeable_tiles(curr_board)
+    valid_moves = get_valid_moves(curr_board, mergeable_rows, mergeable_cols)
 
-    assert len(returned_moves) == len(all_rewards)
+    if not valid_moves:
+        return -10
+    
+    boards_after_moves = [game.board_from_move(move) for move in valid_moves]
 
-    return returned_moves, all_rewards
+    board_rewards = [board_reward(board) for board in boards_after_moves]
+
+    best_reward = max(board_rewards)
+
+    return best_reward
+
+
+def generate_rewards(game, moves_taken):
+
+    boards = [move[0] for move in moves_taken]
+
+    board_rewards = [best_board_reward(game, board) for board in boards]
+
+    return board_rewards
     
 def gather_data(pred_model):
     memory = ReplayBuffer(1000)
 
     while True:
+        start = pc()
         for _ in range(10):
             game = Game2048()
             moves_taken = []
@@ -266,29 +275,32 @@ def gather_data(pred_model):
 
                 moves_taken.append([taken_board_data, taken_feature_data])
 
-            moves, rewards = generate_rewards(moves_taken)
+            
 
-            for move, reward in zip(moves, rewards):
+            rewards = generate_rewards(game, moves_taken)
+
+            assert len(rewards) == len(moves_taken)
+
+            for move, reward in zip(moves_taken, rewards):
                 memory.push(move, reward)
 
-        states, rewards = memory.sample()
+        print(pc() -  start)
 
-        board_data, other_data = zip(*states)
+        train_model(pred_model, memory, epochs=100, batch_size=64)
 
-        board_data = np.array(board_data, dtype=np.float32)
-        other_data = np.array(other_data, dtype=np.float32)
-        rewards = np.array(rewards, dtype=np.float32)
 
-        print(2 ** np.max(board_data))
-        
-        best_board = np.argmax([np.max(i) for i in board_data])
-        print(2 ** board_data[best_board])
+def train_model(model, memory, epochs, batch_size):
 
-        print()
+    states, rewards = memory.sample()
 
-        train_model(pred_model, board_data, other_data, rewards, epochs=100, batch_size=64)
+    board_data, other_data = zip(*states)
 
-def train_model(model, board_data, other_data, rewards, epochs, batch_size):
+    board_data = np.array(board_data, dtype=np.float32)
+    other_data = np.array(other_data, dtype=np.float32)
+    rewards = np.array(rewards, dtype=np.float32)
+
+    print(np.max(board_data))
+
     # Set the model to training mode
     model.train()
 
@@ -297,9 +309,10 @@ def train_model(model, board_data, other_data, rewards, epochs, batch_size):
     other_data = torch.from_numpy(other_data)
     rewards = torch.from_numpy(rewards)
 
+
     # Define the optimizer and the loss function
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-    criterion = nn.BCELoss()
+    criterion = nn.MSELoss()
 
     for epoch in range(epochs):
         total_loss = 0
