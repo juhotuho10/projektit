@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import os
 
 # makes a replay memory with all the moves that have happened
 class ReplayBuffer():
@@ -85,9 +86,6 @@ class torch_model():
 
         print(f"max tile reached: {2 ** np.max(board_data)}" )
 
-        # Set the model to training mode
-        self.model.train()
-
         # Convert to PyTorch tensors
         board_data = torch.from_numpy(board_data)
         other_data = torch.from_numpy(other_data)
@@ -99,6 +97,9 @@ class torch_model():
     def train_model(self, epochs, batch_size):
 
         board_data, other_data, rewards = self.data_from_memory()
+
+        # Set the model to training mode
+        self.model.train()
 
         # Define the optimizer and the loss function
         optimizer = optim.Adam(self.model.parameters(), lr=0.001)
@@ -136,7 +137,17 @@ class torch_model():
             predicted_value = self.model(grid_input, features_input)
             return predicted_value
         
-    
+    def save_model(self):
+        model_path = "2048_model.pt"
+        torch.save(self.model, model_path)
+
+    def load_model(self):
+        model_path = "2048_model.pt"
+        if os.path.exists(model_path):
+            self.model = torch.load(model_path)
+        else:
+            print("Model path doesn't exists")
+            
 
 def get_data(curr_board: np.ndarray):
 
@@ -382,7 +393,7 @@ def gather_data():
 
         pred_model.train_model(epochs=100, batch_size=64)
 
-    model_path = "2048_model.pt"
-    torch.save(pred_model.model, model_path)
+    pred_model.save_model()
 
-gather_data()
+if __name__ == "__main__":
+    gather_data()
