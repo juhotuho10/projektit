@@ -40,10 +40,8 @@ class DualInputModel(nn.Module):
         # Dense layer for additional features
         self.fc_features = nn.Linear(in_features=5, out_features=64)
         # Combined layers for final processing
-        self.fc1 = nn.Linear(in_features=64 * 3 * 3 + 64, out_features=128)
-        self.fc2 = nn.Linear(in_features=128, out_features=64)
-        self.fc3 = nn.Linear(in_features=64, out_features=32)
-        self.output = nn.Linear(in_features=32, out_features=1)
+        self.fc1 = nn.Linear(in_features=64 * 3 * 3 + 64, out_features=64)
+        self.output = nn.Linear(in_features=64, out_features=1)
 
     def forward(self, grid_input, features_input):
         # Process grid input through convolutional layers
@@ -54,8 +52,6 @@ class DualInputModel(nn.Module):
         # Combine and process through additional layers
         combined = torch.cat((x1, x2), dim=1)
         combined = F.relu(self.fc1(combined))
-        combined = F.relu(self.fc2(combined))
-        combined = F.relu(self.fc3(combined))
         output = self.output(combined)
         return output
     
@@ -81,31 +77,47 @@ class torch_model():
         return board_data, other_data, rewards
 
     def train_model(self, epochs, batch_size):
-        # Train the model using data from memory
+
         board_data, other_data, rewards = self.data_from_memory()
+
+        # Set the model to training mode
         self.model.train()
+
+        # Define the optimizer and the loss function
         optimizer = optim.Adam(self.model.parameters(), lr=0.001)
         criterion = nn.MSELoss()
 
         for epoch in range(epochs):
+
             for i in range(0, len(board_data), batch_size):
+                # Get the mini-batch
                 batch_grid = board_data[i:i+batch_size]
                 batch_features = other_data[i:i+batch_size]
                 batch_labels = rewards[i:i+batch_size]
+
+                # Zero the parameter gradients
                 optimizer.zero_grad()
+
+                # Forward pass
                 outputs = self.model(batch_grid, batch_features)
                 loss = criterion(outputs.squeeze(), batch_labels)
+
+                # Backward pass and optimize
                 loss.backward()
                 optimizer.step()
 
     def predict(self, grid_input, features_input):
-        # Predict the value for a given state
+        # predict a score from a given state
         self.model.eval()
         grid_input = np.array(grid_input, dtype=np.float32)
         features_input = np.array(features_input, dtype=np.float32)
-        grid_input = torch.from_numpy(grid_input)
-        features_input = torch.from_numpy(features_input)
-        predicted_value = self.model(grid_input, features_input)
+
+        with torch.no_grad():  # Disable gradient computation
+            grid_input = torch.from_numpy(grid_input)
+            features_input = torch.from_numpy(features_input)
+            
+            predicted_value = self.model(grid_input, features_input)
+            
         return predicted_value
         
     def save_model(self):
