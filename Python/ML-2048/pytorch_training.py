@@ -68,6 +68,76 @@ class DualInputModel(nn.Module):
 
         return output
     
+class torch_model():
+    def __init__(self, memory_size = 1000):
+        self.model = DualInputModel()
+        self.memory = ReplayBuffer(memory_size)
+
+    def data_from_memory(self):
+
+        states, rewards = self.memory.sample()
+
+        board_data, other_data = zip(*states)
+
+        board_data = np.array(board_data, dtype=np.float32)
+        other_data = np.array(other_data, dtype=np.float32)
+        rewards = np.array(rewards, dtype=np.float32)
+
+        print(f"max tile reached: {2 ** np.max(board_data)}" )
+
+        # Set the model to training mode
+        self.model.train()
+
+        # Convert to PyTorch tensors
+        board_data = torch.from_numpy(board_data)
+        other_data = torch.from_numpy(other_data)
+        rewards = torch.from_numpy(rewards)
+
+        return board_data, other_data, rewards
+
+
+    def train_model(self, epochs, batch_size):
+
+        board_data, other_data, rewards = self.data_from_memory()
+
+        # Define the optimizer and the loss function
+        optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+        criterion = nn.MSELoss()
+
+        for epoch in range(epochs):
+
+            for i in range(0, len(board_data), batch_size):
+                # Get the mini-batch
+                batch_grid = board_data[i:i+batch_size]
+                batch_features = other_data[i:i+batch_size]
+                batch_labels = rewards[i:i+batch_size]
+
+                # Zero the parameter gradients
+                optimizer.zero_grad()
+
+                # Forward pass
+                outputs = self.model(batch_grid, batch_features)
+                loss = criterion(outputs.squeeze(), batch_labels)
+
+                # Backward pass and optimize
+                loss.backward()
+                optimizer.step()
+
+
+    def predict(self, grid_input, features_input):
+        self.model.eval()
+        grid_input = np.array(grid_input, dtype=np.float32)
+        features_input = np.array(features_input, dtype=np.float32)
+
+        with torch.no_grad():  # Disable gradient computation
+            grid_input = torch.from_numpy(grid_input)
+            features_input = torch.from_numpy(features_input)
+            
+            predicted_value = self.model(grid_input, features_input)
+            return predicted_value
+        
+    
+
 def get_data(curr_board: np.ndarray):
 
     curr_board = curr_board.astype(int)
@@ -210,18 +280,6 @@ def get_max_value_score(curr_board: np.ndarray):
         return 0
 
 
-def predict(pred_model, grid_input, features_input):
-
-    grid_input = np.array(grid_input, dtype=np.float32)
-    features_input = np.array(features_input, dtype=np.float32)
-
-    with torch.no_grad():  # Disable gradient computation
-        grid_input = torch.from_numpy(grid_input)
-        features_input = torch.from_numpy(features_input)
-        
-        predicted_value = pred_model(grid_input, features_input)
-        return predicted_value
-
 def data_from_boards(boards_after_moves: np.ndarray):
     board_data_list = []
     feature_data_list = []
@@ -277,11 +335,12 @@ def generate_rewards(game, moves_taken):
 
     return board_rewards
 
-def gather_data(pred_model):
-    memory = ReplayBuffer(1000)
+def gather_data():
 
-    while True:
-        while not memory.is_full():
+    pred_model = torch_model(1000)
+
+    for _ in range(50):
+        while not pred_model.memory.is_full():
             game = Game2048()
             moves_taken = []
             boards_taken = []
@@ -296,8 +355,8 @@ def gather_data(pred_model):
                 boards_after_moves = [game.board_from_move(move) for move in valid_moves]
                 
                 board_data_list, feature_data_list = data_from_boards(boards_after_moves)
-
-                predicted_scores = predict(pred_model, board_data_list, feature_data_list)
+                
+                predicted_scores = pred_model.predict(board_data_list, feature_data_list)
 
                 max_index = np.argmax(predicted_scores)
 
@@ -319,62 +378,11 @@ def gather_data(pred_model):
             assert len(rewards) == len(moves_taken)
 
             for move, reward in zip(moves_taken, rewards):
-                memory.push(move, reward)
+                pred_model.memory.push(move, reward)
 
-        train_model(pred_model, memory, epochs=100, batch_size=64)
+        pred_model.train_model(epochs=100, batch_size=64)
 
+    model_path = "2048_model.pt"
+    torch.save(pred_model.model, model_path)
 
-def train_model(model, memory, epochs, batch_size):
-
-    states, rewards = memory.sample()
-
-    board_data, other_data = zip(*states)
-
-    board_data = np.array(board_data, dtype=np.float32)
-    other_data = np.array(other_data, dtype=np.float32)
-    rewards = np.array(rewards, dtype=np.float32)
-
-    # Set the model to training mode
-    model.train()
-
-    # Convert to PyTorch tensors
-    board_data = torch.from_numpy(board_data)
-    other_data = torch.from_numpy(other_data)
-    rewards = torch.from_numpy(rewards)
-
-
-    # Define the optimizer and the loss function
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    criterion = nn.MSELoss()
-
-    for epoch in range(epochs):
-        total_loss = 0
-
-        for i in range(0, len(board_data), batch_size):
-            # Get the mini-batch
-            batch_grid = board_data[i:i+batch_size]
-            batch_features = other_data[i:i+batch_size]
-            batch_labels = rewards[i:i+batch_size]
-
-            # Zero the parameter gradients
-            optimizer.zero_grad()
-
-            # Forward pass
-            outputs = model(batch_grid, batch_features)
-            loss = criterion(outputs.squeeze(), batch_labels)
-
-            # Backward pass and optimize
-            loss.backward()
-            optimizer.step()
-
-            total_loss += loss.item()
-
-        #average_loss = total_loss / (len(board_data) // batch_size)
-        #print(f'Epoch [{epoch+1}/{epochs}], Loss: {average_loss:.4f}')
-
-
-# Example model predictions for each sample
-model = DualInputModel()
-model.eval()  # Set the model to evaluation mode
-
-gather_data(model)
+gather_data()
