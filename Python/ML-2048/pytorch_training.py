@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import random
 
 from time import perf_counter as pc
 
@@ -70,7 +69,7 @@ class DualInputModel(nn.Module):
         output = self.output(combined)
 
         return output
-
+    
 def get_data(curr_board: np.ndarray):
 
     curr_board = curr_board.astype(int)
@@ -102,7 +101,44 @@ def get_data(curr_board: np.ndarray):
     other_data = np.array([empty_count, max_num_count, max_mergeable, valid_move_count, max_value_score], dtype=np.float32)
     return log_board, other_data
 
-def count_mergeable_tiles(curr_board):
+
+def find_longest_chain(board, tile_value, i, j, visited):
+    if (i, j) in visited or board[i][j] != tile_value:
+        return 0
+
+    visited.add((i, j))
+    max_chain = 1  # Current tile is part of the chain
+
+    # Directions: up, down, left, right
+    directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+
+    for dx, dy in directions:
+        x, y = i + dx, j + dy
+        if 0 <= x < len(board) and 0 <= y < len(board) and board[x][y] == tile_value / 2:
+            max_chain = max(max_chain, 1 + find_longest_chain(board, tile_value / 2, x, y, visited))
+
+    return max_chain
+
+def calculate_longest_chain(board):
+    max_chain_length = 0
+    visited = set()
+
+    max_value_positions = find_max_positions(board)
+
+    for pos in max_value_positions:
+        i, j = pos
+        chain_length = find_longest_chain(board, board[i][j], i, j, visited)
+        max_chain_length = max(max_chain_length, chain_length)
+
+    return max_chain_length
+
+def find_max_positions(grid):
+    max_val = np.max(grid)
+    positions = np.where(grid == max_val)
+    return list(zip(positions[0], positions[1]))
+
+
+def count_mergeable_tiles(curr_board: np.ndarray) -> int:
     mergeable_rows = 0
     mergeable_cols = 0
 
@@ -124,7 +160,7 @@ def count_mergeable_tiles(curr_board):
 
     return mergeable_rows, mergeable_cols
 
-def get_valid_moves(curr_board, mergeable_rows, mergeable_cols):
+def get_valid_moves(curr_board: np.ndarray, mergeable_rows: int, mergeable_cols: int):
     valid_directions = []
 
     if mergeable_rows != 0:
@@ -158,7 +194,7 @@ def get_valid_moves(curr_board, mergeable_rows, mergeable_cols):
 
     return list(set(valid_directions))
 
-def get_max_value_score(curr_board):
+def get_max_value_score(curr_board: np.ndarray):
     max_value = np.max(curr_board)
 
     # checks if max value is in a corner
@@ -175,6 +211,7 @@ def get_max_value_score(curr_board):
     else:
         return 0
 
+
 def predict(pred_model, grid_input, features_input):
 
     grid_input = np.array(grid_input, dtype=np.float32)
@@ -186,8 +223,8 @@ def predict(pred_model, grid_input, features_input):
         
         predicted_value = pred_model(grid_input, features_input)
         return predicted_value
-    
-def data_from_boards(boards_after_moves):
+
+def data_from_boards(boards_after_moves: np.ndarray):
     board_data_list = []
     feature_data_list = []
 
@@ -202,15 +239,18 @@ def data_from_boards(boards_after_moves):
 
     return board_data_list, feature_data_list
 
-def board_reward(board):
+def board_reward(board: np.ndarray):
+
+    chain_reward = calculate_longest_chain(board)
 
     max_num_reward = np.max(board)
 
     empty_spots = np.sum(board == 0)
+    mergeable_rows, mergeable_cols = count_mergeable_tiles(board)
 
-    empty_spot_reward = (empty_spots / 10) + 0.1
+    max_merges = np.max([mergeable_rows, mergeable_cols])
 
-    total_reward = max_num_reward * empty_spot_reward
+    total_reward = (max_num_reward * 1.5 + empty_spots * 2 + max_merges + chain_reward) / 10
 
     return total_reward
 
@@ -229,7 +269,6 @@ def best_board_reward(game, curr_board):
 
     return best_reward
 
-
 def generate_rewards(game, moves_taken):
 
     boards = [move[0] for move in moves_taken]
@@ -237,7 +276,7 @@ def generate_rewards(game, moves_taken):
     board_rewards = [best_board_reward(game, board) for board in boards]
 
     return board_rewards
-    
+
 def gather_data(pred_model):
     memory = ReplayBuffer(1000)
 
@@ -363,43 +402,3 @@ def generate_dataset(num_samples=1000):
     y = np.array(y_list, dtype=np.float32)
 
     return x_grid, x_features, y
-
-'''
-# Generate the dataset
-x_train_grid, x_train_features, y_train = generate_dataset(1000)
-
-# Convert to PyTorch tensors
-x_train_grid = torch.from_numpy(x_train_grid)
-x_train_features = torch.from_numpy(x_train_features)
-y_train = torch.from_numpy(y_train)
-
-# Create the model
-model = DualInputModel()
-
-# Define loss function and optimizer
-criterion = nn.BCELoss()  # Binary Cross-Entropy Loss for binary classification
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-# Training loop
-num_epochs = 10
-batch_size = 64
-
-for epoch in range(num_epochs):
-    for i in range(0, len(x_train_grid), batch_size):
-        # Get the mini-batch
-        batch_grid = x_train_grid[i:i+batch_size]
-        batch_features = x_train_features[i:i+batch_size]
-        batch_labels = y_train[i:i+batch_size]
-
-        # Zero the parameter gradients
-        optimizer.zero_grad()
-
-        # Forward pass
-        outputs = model(batch_grid, batch_features)
-        loss = criterion(outputs.squeeze(), batch_labels)
-
-        # Backward pass and optimize
-        loss.backward()
-        optimizer.step()
-
-    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')'''
