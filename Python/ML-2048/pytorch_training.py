@@ -5,8 +5,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from time import perf_counter as pc
-
 # makes a replay memory with all the moves that have happened
 class ReplayBuffer():
     def __init__(self, capacity):
@@ -243,6 +241,8 @@ def board_reward(board: np.ndarray):
 
     chain_reward = calculate_longest_chain(board)
 
+    max_value_position_score = get_max_value_score(board)
+
     max_num_reward = np.max(board)
 
     empty_spots = np.sum(board == 0)
@@ -250,7 +250,7 @@ def board_reward(board: np.ndarray):
 
     max_merges = np.max([mergeable_rows, mergeable_cols])
 
-    total_reward = (max_num_reward * 1.5 + empty_spots * 2 + max_merges + chain_reward) / 10
+    total_reward = (max_num_reward * 1.2 + empty_spots * 2 + max_merges + chain_reward + max_value_position_score * 0.5) / 10
 
     return total_reward
 
@@ -281,7 +281,6 @@ def gather_data(pred_model):
     memory = ReplayBuffer(1000)
 
     while True:
-        start = pc()
         while not memory.is_full():
             game = Game2048()
             moves_taken = []
@@ -322,8 +321,6 @@ def gather_data(pred_model):
             for move, reward in zip(moves_taken, rewards):
                 memory.push(move, reward)
 
-        print(pc() -  start)
-
         train_model(pred_model, memory, epochs=100, batch_size=64)
 
 
@@ -336,8 +333,6 @@ def train_model(model, memory, epochs, batch_size):
     board_data = np.array(board_data, dtype=np.float32)
     other_data = np.array(other_data, dtype=np.float32)
     rewards = np.array(rewards, dtype=np.float32)
-
-    print(np.max(board_data))
 
     # Set the model to training mode
     model.train()
@@ -383,22 +378,3 @@ model = DualInputModel()
 model.eval()  # Set the model to evaluation mode
 
 gather_data(model)
-
-def generate_dataset(num_samples=1000):
-    x_grid_list = []
-    x_features_list = []
-    y_list = []
-
-    for _ in range(num_samples):
-        grid_data, feature_data = get_data()
-        label = 1  
-        x_grid_list.append(grid_data)
-        x_features_list.append(feature_data)
-        y_list.append(label)
-
-    # Convert lists to NumPy arrays
-    x_grid = np.array(x_grid_list, dtype=np.float32)
-    x_features = np.array(x_features_list, dtype=np.float32)
-    y = np.array(y_list, dtype=np.float32)
-
-    return x_grid, x_features, y
