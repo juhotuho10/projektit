@@ -20,10 +20,6 @@ def merge(grid:np.ndarray) -> np.ndarray:
                 grid[i, j + 1] = 0
     return grid
 
-'''@jit(nopython=True)
-def reverse(grid: np.ndarray) -> np.ndarray:
-    return np.flip(grid, axis=1)'''
-
 @jit(nopython=True)
 def reverse(grid: np.ndarray) -> np.ndarray:
     reversed_grid = np.zeros_like(grid)
@@ -80,25 +76,6 @@ class Game2048:
         assert direction in ["left", "right", "up", "down"]
         self.move(direction)
         self.add_new_tile()
-    
-        
-    def is_game_over(self):
-        if np.any(self.board == 0):
-            return
-        for i in range(self.size):
-            for j in range(self.size-1):
-                if self.board[i][j] == self.board[i][j+1] or self.board[j][i] == self.board[j+1][i]:
-                    return False
-        return True
-    
-    def move_is_valid(self, direction):
-        temp_game = Game2048()
-        temp_game.board = np.copy(self.board)
-        temp_game.move(direction)
-        is_valid = not np.array_equal(temp_game.board, self.board)
-
-        return is_valid
-    
 
     def board_from_move(self, direction):
         temp_game = Game2048()
