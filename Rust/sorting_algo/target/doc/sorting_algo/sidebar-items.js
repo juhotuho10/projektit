@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["bubble_sort","bucket_sort","comb_sort","default_rust_sort","insertion_sort","main","make_vec","merge_sort","merge_sort_deque","optimized_bubble_sort","quick_sort","selection_sort","shell_sort"]};
