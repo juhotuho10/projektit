@@ -50,10 +50,13 @@ fn main() {
     
             sorted_vec = func(my_vec);
 
-            duration = start.elapsed().as_millis() as f32;
+            duration = start.elapsed().as_nanos() as f32;
 
             // making sure our vector is the same as a known sorted vector
             assert_eq!(sorted_vec, target_vec);
+            
+            // convering the duration to milliseconds while preserving decimals
+            duration = duration / 1000_000_f32;
 
             times.push(duration);
         }
@@ -89,9 +92,8 @@ fn make_vec(x: i32) -> Vec<i32> {
 
 }
 
-fn optimized_bubble_sort(num_vec: Vec<i32>) -> Vec<i32>{
+fn optimized_bubble_sort(mut num_vec: Vec<i32>) -> Vec<i32>{
 
-    let mut num_vec = num_vec;
     for i in 0..num_vec.len()-1 {
 
         for j in 0..num_vec.len()-1-i{   
@@ -106,9 +108,8 @@ fn optimized_bubble_sort(num_vec: Vec<i32>) -> Vec<i32>{
     return num_vec;
 }
 
-fn bubble_sort(num_vec: Vec<i32>) -> Vec<i32>{
+fn bubble_sort(mut num_vec: Vec<i32>) -> Vec<i32>{
 
-    let mut num_vec = num_vec;
     let mut done: bool = false;
 
     while !done {
@@ -125,9 +126,7 @@ fn bubble_sort(num_vec: Vec<i32>) -> Vec<i32>{
 }
 
 
-fn selection_sort(num_vec: Vec<i32>) -> Vec<i32>{
-
-    let mut num_vec: Vec<i32> = num_vec;
+fn selection_sort(mut  num_vec: Vec<i32>) -> Vec<i32>{
     let mut min_index: usize;
     let mut found_index: usize;
     let mut found_min_num: i32;
@@ -153,8 +152,7 @@ fn selection_sort(num_vec: Vec<i32>) -> Vec<i32>{
 }
 
 
-fn insertion_sort(num_vec: Vec<i32>) -> Vec<i32>{
-    let mut num_vec: Vec<i32> = num_vec;
+fn insertion_sort(mut num_vec: Vec<i32>) -> Vec<i32>{
 
     let mut compare_index: usize;
     let mut current_num: i32;
@@ -291,8 +289,7 @@ fn merge_sort(num_vec: Vec<i32>) -> Vec<i32>{
     return final_vec;
 }
 
-fn bucket_sort(num_vec: Vec<i32>) -> Vec<i32>{
-    let mut num_vec: Vec<i32> = num_vec;
+fn bucket_sort(mut num_vec: Vec<i32>) -> Vec<i32>{
 
     let vec_size: usize = num_vec.len();
 
@@ -332,8 +329,7 @@ fn bucket_sort(num_vec: Vec<i32>) -> Vec<i32>{
 
 }
 
-fn default_rust_sort(num_vec: Vec<i32>) -> Vec<i32>{
-    let mut num_vec: Vec<i32> = num_vec;
+fn default_rust_sort(mut num_vec: Vec<i32>) -> Vec<i32>{
 
     num_vec.sort();
 
@@ -341,8 +337,7 @@ fn default_rust_sort(num_vec: Vec<i32>) -> Vec<i32>{
 
 }
 
-fn quick_sort(num_vec: Vec<i32>) -> Vec<i32>{
-    let mut num_vec: Vec<i32> = num_vec;
+fn quick_sort(mut num_vec: Vec<i32>) -> Vec<i32>{
     let vec_len = num_vec.len();
 
     if vec_len > 2{
@@ -397,8 +392,7 @@ fn quick_sort(num_vec: Vec<i32>) -> Vec<i32>{
 
 
 
-fn comb_sort(num_vec: Vec<i32>) -> Vec<i32>{
-    let mut num_vec: Vec<i32> = num_vec;
+fn comb_sort(mut num_vec: Vec<i32>) -> Vec<i32>{
     let shrinking_factor: f32 = 0.77;
     let mut gap = (num_vec.len() as f32 * shrinking_factor).round() as usize;
     let vec_len = num_vec.len();
@@ -430,12 +424,10 @@ fn comb_sort(num_vec: Vec<i32>) -> Vec<i32>{
 
 }
 
-fn shell_sort(num_vec: Vec<i32>) -> Vec<i32>{
+fn shell_sort(mut num_vec: Vec<i32>) -> Vec<i32>{
 
     // no idea why my shell sort is so slow, it's supposed to be faster than insertion short, but this is a bit slower?
-    let mut num_vec: Vec<i32> = num_vec;
 
-    
     let mut compare_index: usize;
     let mut current_num: i32;
 

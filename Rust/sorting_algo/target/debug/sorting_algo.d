@@ -1,1 +1,0 @@
-C:\Users\TK-Kone\Documents\Python_hommelit\Git_repo\projektit\Rust\sorting_algo\target\debug\sorting_algo.exe: C:\Users\TK-Kone\Documents\Python_hommelit\Git_repo\projektit\Rust\sorting_algo\src\main.rs
