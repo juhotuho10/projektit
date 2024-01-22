@@ -38,8 +38,8 @@ fn main() {
         println!("function: {:?} times in ms:", fn_names[fn_id]);
         times = Vec::new();
         
-        for i in range_vec{
-            my_vec = make_vec(i);
+        for range in range_vec{
+            my_vec = make_vec(range);
 
             target_vec = my_vec.clone();
 
@@ -50,14 +50,11 @@ fn main() {
     
             sorted_vec = func(my_vec);
 
-            duration = start.elapsed().as_nanos() as f32;
+            duration = start.elapsed().as_millis() as f32;
 
             // making sure our vector is the same as a known sorted vector
             assert_eq!(sorted_vec, target_vec);
 
-            // nano seconds to milliseconds
-            duration = duration / (1000_000_f32);
-    
             times.push(duration);
         }
         println!("{:?}\n", times);
