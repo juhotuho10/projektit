@@ -191,11 +191,11 @@ fn merge_sort_deque(num_vec: Vec<i32>) -> Vec<i32>{
     let mut right_side: Vec<i32> = num_vec[middle..end].to_vec();
 
     if left_side.len() > 1{
-        left_side = merge_sort(left_side);
+        left_side = merge_sort_deque(left_side);
     }
 
     if right_side.len() > 1{
-        right_side = merge_sort(right_side);
+        right_side = merge_sort_deque(right_side);
     }
 
     let mut left_side: VecDeque<i32> = VecDeque::from(left_side);
