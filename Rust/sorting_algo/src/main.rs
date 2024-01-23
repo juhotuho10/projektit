@@ -203,36 +203,35 @@ fn merge_sort_deque(num_vec: Vec<i32>) -> Vec<i32>{
 
     let mut final_vec: VecDeque<i32> = VecDeque::new();
 
-    let mut left_last: usize = left_side.len()-1;
-    let mut right_last: usize = right_side.len()-1;
+    let mut first_left = left_side.pop_front();
+    let mut first_right = right_side.pop_front();
 
-    let mut push_num: i32;
-
-    // merging step
     loop {
-        if left_side[0] < right_side[0]{
-            push_num = left_side.pop_front().unwrap();
-            final_vec.push_back(push_num);
-
-            if left_last == 0{
+        match (first_left, first_right){
+            (Some(left), Some(right)) => {
+                if left < right{
+                    final_vec.push_back(left);
+                    first_left = left_side.pop_front();
+                }else {
+                    final_vec.push_back(right);
+                    first_right = right_side.pop_front();
+                }
+            },
+            (None, Some(right)) => {
+                final_vec.push_back(right);
                 final_vec.extend(right_side);
                 break;
-            }else{
-                left_last -= 1;
-            }
 
-        }else{
-            push_num = right_side.pop_front().unwrap();
-            final_vec.push_back(push_num);
-
-            if right_last == 0{
+            },
+            (Some(left), None) => {
+                final_vec.push_back(left);
                 final_vec.extend(left_side);
                 break;
-            }else{
-                right_last -= 1;
-            }
+            },
+            (None, None) => panic!("Both fields empty, shouldn't happen ever"),
         }
     }
+
     let final_vec: Vec<i32> = final_vec.into_iter().collect();
     return final_vec;
 }
