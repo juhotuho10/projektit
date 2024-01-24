@@ -24,9 +24,9 @@ fn main() {
         "default_rust_sort",
         "comb_sort",
         "quick_sort",
-        "bucket_sort",
         "merge_sort_deque",
         "merge_sort",
+        "bucket_sort",
         "insertion_sort",
         "shell_sort",
         "selection_sort",
@@ -38,9 +38,9 @@ fn main() {
         default_rust_sort,
         comb_sort,
         quick_sort,
-        bucket_sort,
         merge_sort_deque,
         merge_sort,
+        bucket_sort,
         insertion_sort,
         shell_sort,
         selection_sort,
@@ -292,9 +292,14 @@ fn merge_sort(num_vec: Vec<i32>) -> Vec<i32> {
 fn bucket_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
     let vec_size: usize = num_vec.len();
 
-    let min_int: i32 = *num_vec.iter().min().unwrap();
+    let min_opt = num_vec.iter().min();
 
-    let max_int: i32 = *num_vec.iter().max().unwrap();
+    let max_opt = num_vec.iter().max();
+
+    let (min_int, max_int) = match (min_opt, max_opt) {
+        (Some(min), Some(max)) => (*min, *max),
+        (_, _) => panic!("Vector empty"),
+    };
 
     let range: f32 = (max_int - min_int) as f32;
 
