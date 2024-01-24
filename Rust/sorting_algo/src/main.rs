@@ -78,7 +78,7 @@ fn main() {
             assert_eq!(sorted_vec, target_vec);
 
             // convering the duration to milliseconds while preserving decimals
-            duration = duration / 1000_000_f32;
+            duration /= 1_000_000_f32;
 
             times.push(duration);
         }
@@ -105,7 +105,7 @@ fn make_vec(x: i32) -> Vec<i32> {
         num_vec.push(rng.gen_range(-x..=x));
     }
 
-    return num_vec;
+    num_vec
 }
 
 fn optimized_bubble_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
@@ -117,7 +117,7 @@ fn optimized_bubble_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
         }
     }
 
-    return num_vec;
+    num_vec
 }
 
 fn bubble_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
@@ -132,7 +132,7 @@ fn bubble_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
             }
         }
     }
-    return num_vec;
+    num_vec
 }
 
 fn selection_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
@@ -145,7 +145,7 @@ fn selection_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
         min_index = i;
         found_min_num = num_vec[i];
         found_index = i;
-        for j in (0 + i + 1)..num_vec.len() {
+        for j in (i + 1)..num_vec.len() {
             curr_num = num_vec[j];
             if curr_num < found_min_num {
                 found_min_num = curr_num;
@@ -156,7 +156,7 @@ fn selection_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
         num_vec[found_index] = num_vec[min_index];
         num_vec[min_index] = found_min_num;
     }
-    return num_vec;
+    num_vec
 }
 
 fn insertion_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
@@ -183,7 +183,7 @@ fn insertion_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
         }
     }
 
-    return num_vec;
+    num_vec
 }
 
 fn merge_sort_deque(num_vec: Vec<i32>) -> Vec<i32> {
@@ -234,9 +234,7 @@ fn merge_sort_deque(num_vec: Vec<i32>) -> Vec<i32> {
         }
     }
 
-    let final_vec: Vec<i32> = final_vec.into_iter().collect();
-
-    return final_vec;
+    final_vec.into_iter().collect()
 }
 
 fn merge_sort(num_vec: Vec<i32>) -> Vec<i32> {
@@ -286,7 +284,7 @@ fn merge_sort(num_vec: Vec<i32>) -> Vec<i32> {
             }
         }
     }
-    return final_vec;
+    final_vec
 }
 
 fn bucket_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
@@ -326,59 +324,64 @@ fn bucket_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
 
     num_vec = insertion_sort(num_vec);
 
-    return num_vec;
+    num_vec
 }
 
 fn default_rust_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
     num_vec.sort();
 
-    return num_vec;
+    num_vec
 }
 
 fn quick_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
     let vec_len = num_vec.len();
 
-    if vec_len > 2 {
-        let pivot = num_vec[0];
-        let mut a_idx: usize = 1;
-        let mut b_idx: usize = num_vec.len() - 1;
+    match vec_len {
+        2 => {
+            if num_vec[0] > num_vec[1] {
+                num_vec.swap(0, 1);
+            }
+        }
 
-        while a_idx != b_idx {
-            while (num_vec[a_idx] <= pivot) && (a_idx != b_idx) {
-                a_idx += 1;
+        3.. => {
+            let pivot = num_vec[0];
+            let mut a_idx: usize = 1;
+            let mut b_idx: usize = num_vec.len() - 1;
+
+            while a_idx != b_idx {
+                while (num_vec[a_idx] <= pivot) && (a_idx != b_idx) {
+                    a_idx += 1;
+                }
+
+                while (num_vec[b_idx] > pivot) && (a_idx != b_idx) {
+                    b_idx -= 1;
+                }
+                num_vec.swap(a_idx, b_idx);
             }
 
-            while (num_vec[b_idx] > pivot) && (a_idx != b_idx) {
-                b_idx -= 1;
+            let first_half;
+            let second_half;
+
+            if num_vec[a_idx] < pivot {
+                num_vec.swap(0, a_idx);
+                first_half = num_vec[0..a_idx].to_vec();
+                second_half = num_vec[a_idx + 1..].to_vec();
+            } else {
+                num_vec.swap(0, a_idx - 1);
+                first_half = num_vec[0..a_idx - 1].to_vec();
+                second_half = num_vec[a_idx..].to_vec();
             }
-            num_vec.swap(a_idx, b_idx);
+
+            num_vec = quick_sort(first_half);
+
+            num_vec.push(pivot);
+
+            num_vec.extend(quick_sort(second_half));
         }
-
-        let first_half;
-        let second_half;
-
-        if num_vec[a_idx] < pivot {
-            num_vec.swap(0, a_idx);
-            first_half = num_vec[0..a_idx].to_vec();
-            second_half = num_vec[a_idx + 1..].to_vec();
-        } else {
-            num_vec.swap(0, a_idx - 1);
-            first_half = num_vec[0..a_idx - 1].to_vec();
-            second_half = num_vec[a_idx..].to_vec();
-        }
-
-        num_vec = quick_sort(first_half);
-
-        num_vec.push(pivot);
-
-        num_vec.extend(quick_sort(second_half));
-    } else if vec_len == 2 {
-        if num_vec[0] > num_vec[1] {
-            num_vec.swap(0, 1);
-        }
+        _ => {}
     }
 
-    return num_vec;
+    num_vec
 }
 
 fn comb_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
@@ -406,7 +409,7 @@ fn comb_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
         gap = gap.max(1);
     }
 
-    return num_vec;
+    num_vec
 }
 
 fn shell_sort(mut num_vec: Vec<i32>) -> Vec<i32> {
