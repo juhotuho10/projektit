@@ -1,0 +1,16 @@
+WeatherApp:
+   tehty 2023 lokakuussa. 
+   Ohjelmointi 3 kurssin loppuprojekti. 
+   Työn piti olla parityö, mutta todellisuudessa toteutin projektin itsekseni
+   Kyseessä on käytevä sää applikaatio joka käyttää open weather API ja jossa on hieno interaktiivinen UI
+
+   Projektin kaikki documentaatio löytyy Documentation kansiosta
+
+   applikaation saa ajettua avaten komentokehotteen ja ajaen:
+
+   "mvn package" ja sen jälkeen "java -jar target\WeatherApp-1.0.one-jar.jar"
+
+   tosiaan java ja maven on oltava asennettuna koneelle
+
+
+   
