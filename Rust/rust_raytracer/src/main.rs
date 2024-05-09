@@ -2,7 +2,7 @@ use eframe::egui;
 use egui::ColorImage;
 use egui::Frame;
 use egui::TextureHandle;
-use glam::{vec2, vec3};
+use glam::{vec2, vec3, Vec2, Vec3};
 use rand::{thread_rng, Rng};
 use std::time::Instant;
 
@@ -47,11 +47,12 @@ impl eframe::App for MyApp {
         // Set the entire background color
         let visual = egui::Visuals::dark();
         ctx.set_visuals(visual);
-
         let size: egui::Vec2 = ctx.available_rect().size(); // Get the size of the available area
-        if self.image.pixels.is_empty() || window_rezised(&size, &self.image.size) {
+
+        if self.image.pixels.is_empty() || window_rezised(&size, &self.image.size) || self.moved {
             self.image = render(&self.pool, size.x, size.y);
-            println!("re-render")
+            println!("re-render");
+            self.moved = false;
         }
 
         let texture = ctx.load_texture(
@@ -144,10 +145,10 @@ fn per_pixel(coords: glam::Vec2) -> glam::Vec3 {
     // r = sphere radius
     // t = hit distance
 
-    let ray_origin: glam::Vec3 = glam::vec3(0., 0., -1.);
-    let ray_direction: glam::Vec3 = glam::vec3(coords.x(), coords.y(), -1.);
-    let sphere_origin: glam::Vec3 = glam::vec3(0., 0., 0.);
-    let light_direction: glam::Vec3 = glam::vec3(-1., -1., -1.).normalize();
+    let ray_origin = glam::vec3(0., 0., -1.);
+    let ray_direction = glam::vec3(coords.x(), coords.y(), -1.);
+    let sphere_origin = glam::vec3(0., 0., 0.);
+    let light_direction = glam::vec3(-1., -1., -1.).normalize();
     let radius: f32 = 0.5;
 
     let a: f32 = ray_direction.dot(ray_direction);
@@ -159,14 +160,15 @@ fn per_pixel(coords: glam::Vec2) -> glam::Vec3 {
     let discriminant = b * b - 4. * a * c;
 
     if discriminant < 0. {
-        return glam::vec3(0., 0., 0.);
+        // we missed the sphere
+        return glam::Vec3::splat(0.);
     }
 
     // (-b +- discriminant) / 2a
     //let t0 = (-b + discriminant.sqrt()) / (2. * a);
     let closest_t = (-b - discriminant.sqrt()) / (2. * a);
 
-    let hit_point: glam::Vec3 = ray_origin + ray_direction * closest_t;
+    let hit_point = ray_origin + ray_direction * closest_t;
 
     let sphere_normal = (hit_point - sphere_origin).normalize();
 
