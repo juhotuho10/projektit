@@ -1,6 +1,6 @@
 use eframe::egui;
 use egui::ColorImage;
-use egui::Response;
+use egui::Frame;
 use egui::TextureHandle;
 use glam::{vec2, vec3};
 use rand::{thread_rng, Rng};
@@ -13,7 +13,7 @@ fn main() -> Result<(), eframe::Error> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([1600.0, 1000.0]),
+        viewport: egui::ViewportBuilder::default().with_inner_size([1000.0, 1000.0]),
         ..Default::default()
     };
 
@@ -67,9 +67,12 @@ impl eframe::App for MyApp {
                 ui.image(&texture);
             });
 
+        let transparent_frame =
+            Frame::none().fill(egui::Color32::from_rgba_unmultiplied(0, 0, 0, 100));
         // Side Panel on the right side
         egui::SidePanel::right("right_panel")
             .resizable(false)
+            .frame(transparent_frame)
             .show(ctx, |ui| {
                 ui.vertical_centered(|ui| {
                     if ui.button("render").clicked() {
@@ -125,7 +128,7 @@ fn render(thread_pool: &ThreadPool, x_size: f32, y_size: f32) -> ColorImage {
             let pixel_position = glam::vec2(x_color, y_color);
             let pixel_color = per_pixel(pixel_position);
 
-            let color = to_rgb(pixel_color);
+            let color: [u8; 3] = to_rgb(pixel_color);
             pixels.extend_from_slice(&color);
         }
     }
@@ -141,8 +144,10 @@ fn per_pixel(coords: glam::Vec2) -> glam::Vec3 {
     // r = sphere radius
     // t = hit distance
 
-    let ray_origin: glam::Vec3 = glam::vec3(0., 0., -2.);
+    let ray_origin: glam::Vec3 = glam::vec3(0., 0., -1.);
     let ray_direction: glam::Vec3 = glam::vec3(coords.x(), coords.y(), -1.);
+    let sphere_origin: glam::Vec3 = glam::vec3(0., 0., 0.);
+    let light_direction: glam::Vec3 = glam::vec3(-1., -1., -1.).normalize();
     let radius: f32 = 0.5;
 
     let a: f32 = ray_direction.dot(ray_direction);
@@ -163,7 +168,13 @@ fn per_pixel(coords: glam::Vec2) -> glam::Vec3 {
 
     let hit_point: glam::Vec3 = ray_origin + ray_direction * closest_t;
 
-    hit_point
+    let sphere_normal = (hit_point - sphere_origin).normalize();
+
+    // cosine of the angle between hitpoin and the light direction
+    // min light intenstiy is 0
+    let light_intensity = sphere_normal.dot(-light_direction).max(0.);
+
+    glam::vec3(1., 0., 1.) * light_intensity
 }
 
 fn window_rezised(current_size: &egui::Vec2, prev_size: &[usize; 2]) -> bool {
