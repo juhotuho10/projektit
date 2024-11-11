@@ -101,7 +101,6 @@ impl eframe::App for MyApp {
             );
             egui::Context::send_viewport_cmd(ctx, egui::ViewportCommand::CursorVisible(true));
         }
-        //egui::InputState::key_pressed(ctx, Key::Space);
 
         egui::SidePanel::right("right_panel")
             .resizable(false)
