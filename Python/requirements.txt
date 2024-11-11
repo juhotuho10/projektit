@@ -1,4 +1,3 @@
-tkinter; sys_platform == 'win32'
 pygame
 numpy
 gymnasium
