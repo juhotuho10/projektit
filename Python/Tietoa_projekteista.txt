@@ -23,8 +23,6 @@ Alcoholic spider:
 
    ohjelma joutuu käymään läpi paljon html koodia, joten sen ajaminen ja RAM:iin lataaminen saattaa olla hieman hidasta, ajamisessa saattaa mennä n. 10-20 min
 
-   pidensin timeout aikaa ja tämä ehkä korjasi ongelman, mutta jätän tämä ohjeen kaiken varalta:
-
    saatat myös ehkä joutua käymään get_correct_url() function nettisivulla ennen kun koodi toimii
    linkki: https://www.alko.fi/tuotteet/tuotelistaus?SearchTerm=*&PageSize=12&SortingAttribute=&PageNumber=1&SearchParameter=%26%40QueryTerm%3D*%26ContextCategoryUUID%3D6Q7AqG5uhTIAAAFVOmkI2BYA%26OnlineFlag%3D1
 
