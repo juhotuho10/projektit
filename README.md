@@ -136,8 +136,12 @@ Rewards:
 All project documentation can be found in the Documentation folder.
 
 To run the application, open the command prompt and execute:
+
 ```mvn package```
+
 and then:
+
 ```java -jar target\WeatherApp-1.0.one-jar.jar```
 
+Note: You need to have Java and Maven installed on your system.
 
