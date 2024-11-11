@@ -1,9 +1,0 @@
-Linkki Kaggle profiilin data-analyysi / ML prediktio töihin:
-   https://www.kaggle.com/juhotuho10/code
-
-Sorting algorithms:
-
-Tehty elokuu 2023, suureksi osaksi halusin vain kokeilla Rustia ja sen kanssa ohjelmointia.
-Tein algorytmit vain kuvauksien mukaan niiden toiminnasta, joten niiden nopeus ei aina ole optimaalinen, mutta opin paljon.
-
-koodin voi ajaa sorting_algo.exe tiedostosta, ja source koodi on src/main.rs
