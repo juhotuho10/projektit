@@ -35,20 +35,34 @@ class DualInputModel(nn.Module):
     def __init__(self):
         super(DualInputModel, self).__init__()
         # Convolutional layers for grid processing
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=(2, 2))
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=20, kernel_size=(2, 2), padding=1)
+        self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=20, out_channels=20, kernel_size=(2, 2), padding=1)
+        self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=20, out_channels=20, kernel_size=(2, 2), padding=1)
+        self.maxpool3 = nn.MaxPool2d(kernel_size=2, stride=1)
         self.flatten = nn.Flatten()
-        # Dense layer for additional features
-        self.fc_features = nn.Linear(in_features=5, out_features=64)
-        # Combined layers for final processing
-        self.fc1 = nn.Linear(in_features=64 * 3 * 3 + 64, out_features=64)
+
+        self.fc_features1 = nn.Linear(in_features=5, out_features=32)
+        self.fc_features2 = nn.Linear(in_features=32, out_features=32)
+
+        self.fc1 = nn.Linear(in_features=1312, out_features=64)
         self.output = nn.Linear(in_features=64, out_features=1)
 
     def forward(self, grid_input, features_input):
-        # Process grid input through convolutional layers
+        # grid input through convolutional layers
         x1 = F.relu(self.conv1(grid_input))
+        x1 = self.maxpool1(x1)
+        x1 = F.relu(self.conv2(x1))
+        x1 = self.maxpool2(x1)
+        x1 = F.relu(self.conv3(x1))
+        x1 = self.maxpool3(x1)
         x1 = self.flatten(x1)
-        # Process features input through dense layer
-        x2 = F.relu(self.fc_features(features_input))
+
+        # features input through dense layers
+        x2 = F.relu(self.fc_features1(features_input))
+        x2 = F.relu(self.fc_features2(x2))
+
         # Combine and process through additional layers
         combined = torch.cat((x1, x2), dim=1)
         combined = F.relu(self.fc1(combined))
@@ -58,7 +72,8 @@ class DualInputModel(nn.Module):
 # Class to manage the neural network model and replay memory
 class torch_model():
     def __init__(self, memory_size = 1000):
-        self.model = DualInputModel()  # Initialize the model
+
+        self.model = DualInputModel() 
         self.memory = ReplayBuffer(memory_size)  # Initialize the memory buffer
 
     def data_from_memory(self):
@@ -79,12 +94,12 @@ class torch_model():
     def train_model(self, epochs, batch_size):
 
         board_data, other_data, rewards = self.data_from_memory()
-
+        
         # Set the model to training mode
         self.model.train()
 
         # Define the optimizer and the loss function
-        optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+        optimizer = optim.Adam(self.model.parameters(), lr=0.002)
         criterion = nn.MSELoss()
 
         for epoch in range(epochs):
@@ -387,7 +402,7 @@ def gather_data():
                 pred_model.memory.push(move, reward)
 
         # train the model with the boards taken and actual rewards
-        pred_model.train_model(epochs=100, batch_size=64)
+        pred_model.train_model(epochs=100, batch_size=256)
 
     pred_model.save_model()
 
