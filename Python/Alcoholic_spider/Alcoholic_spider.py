@@ -1,16 +1,14 @@
-from bs4 import BeautifulSoup
-import requests
 import re
-from math import *
 import time
-import pandas as pd
-import plotly.express as px
 from datetime import datetime
-import random
+from math import floor
 
+import pandas as pd
+from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
+
+from webdrive_config import setup_webdriver
+
 
 # ajastus decoraattori ottaa function ja palauttaa funktion palautuksen, samalla ottaen aikaa function ajoajasta
 def timing(f):
@@ -24,55 +22,34 @@ def timing(f):
     return wrap
 
 
-def get_html_from_url(url, user_agent, timeout=None):
-    headers = {'User-Agent': user_agent}
-    result = requests.get(url, headers=headers, timeout=timeout)
-    doc = BeautifulSoup(result.text, "html.parser")
-    return doc
-
-
-def get_html_from_url_selenium(url, user_agent):
-    options = Options()
-    options.add_argument(f"user-agent={user_agent}")
-
-    driver = webdriver.Chrome(options=options)
-
+def get_html_from_url(url: str, driver: webdriver.Firefox):
+    print("getting data from url")
     try:
         driver.get(url)
-        time.sleep(random.uniform(2, 5))  # Random delay to mimic human
-
-        # Simulate human-like scrolling
-        for _ in range(random.randint(3, 5)):
-            ActionChains(driver).move_by_offset(0, random.randint(100, 200)).perform()
-            time.sleep(random.uniform(0.2, 0.5))
-
-        # Get page source and parse it with BeautifulSoup
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        soup = BeautifulSoup(driver.page_source, "html.parser")
     except Exception as e:
         print(f"An error occurred: {e}")
-        soup = None
-    finally:
         driver.quit()
+        exit()
 
     return soup
 
+
 # hakee kokonais sivumäärän ja etsii oikean sivun
 @timing
-def get_correct_url(user_agent) -> str:
-
+def get_correct_url(driver: webdriver.Firefox) -> str:
     url = "https://www.alko.fi/tuotteet/tuotelistaus?SearchTerm=*&PageSize=12&SortingAttribute=&PageNumber=1&SearchParameter=%26%40QueryTerm%3D*%26ContextCategoryUUID%3D6Q7AqG5uhTIAAAFVOmkI2BYA%26OnlineFlag%3D1"
+    doc = get_html_from_url(url, driver)
     try:
-
-        doc = get_html_from_url_selenium(url, user_agent)
         products = doc.find(class_="color-primary")
         products = str(*products)
-
-    except Exception as e:
-        print("couldn't load the page, please visit the website link before re-running the script:\n")
-        print("https://www.alko.fi/tuotteet/tuotelistaus?SearchTerm=*&PageSize=12&SortingAttribute=&PageNumber=1&SearchParameter=%26%40QueryTerm%3D*%26ContextCategoryUUID%3D6Q7AqG5uhTIAAAFVOmkI2BYA%26OnlineFlag%3D1")
+    except Exception:
+        print(doc)
+        print("could not find the correct data on the website")
+        exit()
 
     # regex hakee tuotemäärän
-    product_count = re.findall('\d', products)
+    product_count = re.findall("\d", products)
     product_count = int("".join(product_count))
     print("tuotemäärä: ", product_count)
 
@@ -94,9 +71,10 @@ def get_correct_url(user_agent) -> str:
 
 @timing
 def get_data_from_html(doc):
-
     prod_data = doc.find_all(class_="product-data-container")
-    price_data = doc.find_all(class_="js-price-container price-wrapper mc-price hide-for-list-view")
+    price_data = doc.find_all(
+        class_="js-price-container price-wrapper mc-price hide-for-list-view"
+    )
 
     print("prices found")
 
@@ -119,9 +97,7 @@ def get_data_from_html(doc):
 # gets the wanted value in a string, for example '"alcohol": "25.0"' this returns 25.0
 def split_items(list):
     items = list.split(":")[1]
-
-    items = items.replace('"', '').strip()
-
+    items = items.replace('"', "").strip()
     return items
 
 
@@ -130,7 +106,6 @@ def make_dict_from_data(product_data, product_price):
     df = pd.DataFrame()
 
     for i, product in enumerate(product_data):
-
         attributes = product.split(",")
 
         name = [s for s in attributes if "name" in s]
@@ -145,22 +120,32 @@ def make_dict_from_data(product_data, product_price):
 
             adjusted_price = round(float(price) / float(size), 3)
 
-            alcohol_per_l = round(float(alcohol) / adjusted_price ,3)
+            alcohol_per_l = round(float(alcohol) / adjusted_price, 3)
 
-            df_data = {'Name': [name], 'Alcohol': [alcohol], 'Size': [size], 'Price': [price],
-                        'Price_per_liter': [adjusted_price], 'Alcohol_per_euro_per_liter': [alcohol_per_l]}
+            df_data = {
+                "Name": [name],
+                "Alcohol": [alcohol],
+                "Size": [size],
+                "Price": [price],
+                "Price_per_liter": [adjusted_price],
+                "Alcohol_per_euro_per_liter": [alcohol_per_l],
+            }
 
             new_data = pd.DataFrame(df_data)
 
             df = pd.concat([df, new_data], ignore_index=False)
 
-            alcohol_dict.update({name: [alcohol, size, price, f"{adjusted_price}", f"{alcohol_per_l}"]})
+            alcohol_dict.update(
+                {name: [alcohol, size, price, f"{adjusted_price}", f"{alcohol_per_l}"]}
+            )
 
         except Exception:
             # virheellinen tuote
             print(name, alcohol, size)
 
-    sorted_alcohol_dict = {k: v for k, v in sorted(alcohol_dict.items(), key=lambda item: item[1][-1])}
+    sorted_alcohol_dict = {
+        k: v for k, v in sorted(alcohol_dict.items(), key=lambda item: item[1][-1])
+    }
 
     return sorted_alcohol_dict, df
 
@@ -168,8 +153,10 @@ def make_dict_from_data(product_data, product_price):
 def print_alcohol_data(sorted_alcohol_dict):
     for key in sorted_alcohol_dict:
         try:
-            print(f"{key}: alkoholi % per litra per euro: {sorted_alcohol_dict[key][-1]}")
-        except Exception as e:
+            print(
+                f"{key}: alkoholi % per litra per euro: {sorted_alcohol_dict[key][-1]}"
+            )
+        except Exception:
             pass
 
     print(f"lopullinen tuotemäärä: {len(sorted_alcohol_dict)}")
@@ -179,18 +166,24 @@ def print_alcohol_data(sorted_alcohol_dict):
 
 
 def main():
+    try:
+        driver = setup_webdriver(timeout_seconds=1800)
+        url = get_correct_url(driver)
+        print("getting data from Alko, please wait...")
+        print(
+            "seriously, it might take over 20 minutes, there is a lot of HTML that we need to download"
+        )
+        doc = get_html_from_url(url, driver)
 
-    user_agent = "user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.115 Safari/537.36"
-
-    url = get_correct_url(user_agent)
-
-    print("getting data from Alko, please wait...")
-    doc = get_html_from_url_selenium(url, user_agent)
+    except Exception as e:
+        print(f"couldnt get the necessary data from Alko: {e}")
+    finally:
+        driver.quit()
 
     print("website parsed")
 
     # print(doc.prettify())
-    
+
     product_data, product_price = get_data_from_html(doc)
 
     sorted_alcohol_dict, dataframe = make_dict_from_data(product_data, product_price)
@@ -202,14 +195,11 @@ def main():
     dataframe.drop_duplicates(subset="Name", inplace=True)
     dataframe.sort_values("Alcohol_per_euro_per_liter", ascending=False, inplace=True)
 
-    path = f"Price_data/alcohol_prices_{datetime.now().month}_{datetime.now().year}.csv"
-
-    dataframe.to_csv(path)
-
-    # plotly avaa offline nettisivun top 30 parhaasta tuloksesta graaphina
-    fig = px.bar(data_frame=dataframe.head(30), x="Name", y="Alcohol_per_euro_per_liter")
-    fig.show()
+    df_path = (
+        f"Price_data/alcohol_prices_{datetime.now().month}_{datetime.now().year}.csv"
+    )
+    dataframe.to_csv(df_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
