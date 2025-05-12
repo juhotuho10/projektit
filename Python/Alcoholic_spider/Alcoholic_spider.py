@@ -1,5 +1,4 @@
 import re
-import time
 from datetime import datetime
 from math import floor
 
@@ -8,18 +7,6 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 
 from webdrive_config import setup_webdriver
-
-
-# ajastus decoraattori ottaa function ja palauttaa funktion palautuksen, samalla ottaen aikaa function ajoajasta
-def timing(f):
-    def wrap(*args, **kw):
-        time_start = time.time()
-        result = f(*args, **kw)
-        time_end = time.time()
-        print(f"func: {f.__name__} took: {time_end - time_start:.3f} sec")
-        return result
-
-    return wrap
 
 
 def get_html_from_url(url: str, driver: webdriver.Firefox):
@@ -35,8 +22,7 @@ def get_html_from_url(url: str, driver: webdriver.Firefox):
     return soup
 
 
-# hakee kokonais sivumäärän ja etsii oikean sivun
-@timing
+# gets the final destination url with correct page number
 def get_correct_url(driver: webdriver.Firefox) -> str:
     url = "https://www.alko.fi/tuotteet/tuotelistaus?SearchTerm=*&PageSize=12&SortingAttribute=&PageNumber=1&SearchParameter=%26%40QueryTerm%3D*%26ContextCategoryUUID%3D6Q7AqG5uhTIAAAFVOmkI2BYA%26OnlineFlag%3D1"
     doc = get_html_from_url(url, driver)
@@ -48,13 +34,13 @@ def get_correct_url(driver: webdriver.Firefox) -> str:
         print("could not find the correct data on the website")
         exit()
 
-    # regex hakee tuotemäärän
+    # get product count with regex
     product_count = re.findall("\d", products)
     product_count = int("".join(product_count))
     print("tuotemäärä: ", product_count)
 
-    # sivumäärä saadaan tuotemäärästä
-    if product_count % 12 == 0:  # jos jako menee tasan, sivu ei lataa
+    # get page count from the amount of products, 12 products per page
+    if product_count % 12 == 0:  # if even, take last page
         pages = floor(product_count / 12) - 1
     else:
         pages = floor(product_count / 12)
@@ -69,12 +55,9 @@ def get_correct_url(driver: webdriver.Firefox) -> str:
     return url
 
 
-@timing
 def get_data_from_html(doc):
     prod_data = doc.find_all(class_="product-data-container")
-    price_data = doc.find_all(
-        class_="js-price-container price-wrapper mc-price hide-for-list-view"
-    )
+    price_data = doc.find_all(class_="js-price-container price-wrapper mc-price hide-for-list-view")
 
     print("prices found")
 
@@ -135,17 +118,13 @@ def make_dict_from_data(product_data, product_price):
 
             df = pd.concat([df, new_data], ignore_index=False)
 
-            alcohol_dict.update(
-                {name: [alcohol, size, price, f"{adjusted_price}", f"{alcohol_per_l}"]}
-            )
+            alcohol_dict.update({name: [alcohol, size, price, f"{adjusted_price}", f"{alcohol_per_l}"]})
 
         except Exception:
-            # virheellinen tuote
+            # product error, most likely not an alcohol product and something else
             print(name, alcohol, size)
 
-    sorted_alcohol_dict = {
-        k: v for k, v in sorted(alcohol_dict.items(), key=lambda item: item[1][-1])
-    }
+    sorted_alcohol_dict = {k: v for k, v in sorted(alcohol_dict.items(), key=lambda item: item[1][-1])}
 
     return sorted_alcohol_dict, df
 
@@ -153,9 +132,7 @@ def make_dict_from_data(product_data, product_price):
 def print_alcohol_data(sorted_alcohol_dict):
     for key in sorted_alcohol_dict:
         try:
-            print(
-                f"{key}: alkoholi % per litra per euro: {sorted_alcohol_dict[key][-1]}"
-            )
+            print(f"{key}: alkoholi % per litra per euro: {sorted_alcohol_dict[key][-1]}")
         except Exception:
             pass
 
@@ -170,9 +147,7 @@ def main():
         driver = setup_webdriver(timeout_seconds=1800)
         url = get_correct_url(driver)
         print("getting data from Alko, please wait...")
-        print(
-            "seriously, it might take over 20 minutes, there is a lot of HTML that we need to download"
-        )
+        print("seriously, it might take over 20 minutes, there is a lot of HTML that we need to download")
         doc = get_html_from_url(url, driver)
 
     except Exception as e:
@@ -188,16 +163,13 @@ def main():
 
     sorted_alcohol_dict, dataframe = make_dict_from_data(product_data, product_price)
 
-    # data tulostetaan konsoliin
     print_alcohol_data(sorted_alcohol_dict)
 
-    # dataframesta tehdään kuvaaja
+    # dataframe for saving the data
     dataframe.drop_duplicates(subset="Name", inplace=True)
     dataframe.sort_values("Alcohol_per_euro_per_liter", ascending=False, inplace=True)
 
-    df_path = (
-        f"Price_data/alcohol_prices_{datetime.now().month}_{datetime.now().year}.csv"
-    )
+    df_path = f"Price_data/alcohol_prices_{datetime.now().month}_{datetime.now().year}.csv"
     dataframe.to_csv(df_path)
 
 
