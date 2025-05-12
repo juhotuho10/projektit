@@ -36,7 +36,7 @@ def plot_df(df):
         y="Alcohol_per_euro_per_liter",
         color="Name",
         hover_name="Name",
-        hover_data={"date_time": False},
+        hover_data={"date_time": False, "Name": False},
         title="Alcohol per Euro per Liter Over Time",
     )
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     folder = "./Price_data"
     collected_df = load_csv(folder)
 
-    alcohol_filt = collected_df["Alcohol_per_euro_per_liter"] > 1.3
+    alcohol_filt = collected_df["Alcohol_per_euro_per_liter"] > 1.25
     most_alcohol_df = collected_df[alcohol_filt]
 
     plot_df(most_alcohol_df)
