@@ -71,9 +71,7 @@ def get_default_firefox_profile() -> str:
 
 # custom firefox webdrive in order to have a timeout longer than the default 120s
 class CustomFirefoxWebDriver(FirefoxWebDriver):
-    def __init__(
-        self, timeout_seconds: int, options=None, service=None, keep_alive=True
-    ):
+    def __init__(self, timeout_seconds: int, options=None, service=None, keep_alive=True):
         self.service = service if service else FirefoxWebDriver.Service()
         options = options if options else FirefoxWebDriver.Options()
 
@@ -85,9 +83,7 @@ class CustomFirefoxWebDriver(FirefoxWebDriver):
         self.service.path = self.service.env_path() or finder.get_driver_path()
         self.service.start()
 
-        client_config = ClientConfig(
-            remote_server_addr=self.service.service_url, timeout=timeout_seconds
-        )
+        client_config = ClientConfig(remote_server_addr=self.service.service_url, timeout=timeout_seconds)
 
         executor = FirefoxRemoteConnection(
             remote_server_addr=self.service.service_url,
@@ -96,9 +92,7 @@ class CustomFirefoxWebDriver(FirefoxWebDriver):
             client_config=client_config,
         )
 
-        super(FirefoxWebDriver, self).__init__(
-            command_executor=executor, options=options
-        )
+        super(FirefoxWebDriver, self).__init__(command_executor=executor, options=options)
         self._is_remote = False
 
 
@@ -123,9 +117,7 @@ def setup_webdriver(timeout_seconds: int) -> webdriver.Firefox:
 
         print("getting webdriver")
         service = Service(executable_path=GeckoDriverManager().install())
-        driver = CustomFirefoxWebDriver(
-            timeout_seconds, options=firefox_options, service=service
-        )
+        driver = CustomFirefoxWebDriver(timeout_seconds, options=firefox_options, service=service)
 
         driver.set_page_load_timeout(timeout_seconds)
         driver.set_script_timeout(timeout_seconds)

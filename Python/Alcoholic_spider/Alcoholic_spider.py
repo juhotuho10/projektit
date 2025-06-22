@@ -5,7 +5,6 @@ from math import floor
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
-
 from webdrive_config import setup_webdriver
 
 
@@ -15,7 +14,7 @@ def get_html_from_url(url: str, driver: webdriver.Firefox):
         driver.get(url)
         soup = BeautifulSoup(driver.page_source, "html.parser")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred while parsing data:\n{e}")
         driver.quit()
         exit()
 
@@ -37,7 +36,7 @@ def get_correct_url(driver: webdriver.Firefox) -> str:
     # get product count with regex
     product_count = re.findall("\d", products)
     product_count = int("".join(product_count))
-    print("tuotemäärä: ", product_count)
+    print("product count: ", product_count)
 
     # get page count from the amount of products, 12 products per page
     if product_count % 12 == 0:  # if even, take last page
@@ -45,11 +44,11 @@ def get_correct_url(driver: webdriver.Firefox) -> str:
     else:
         pages = floor(product_count / 12)
 
-    print("sivumäärä: ", pages)
+    print("page count: ", pages)
 
     url = f"https://www.alko.fi/tuotteet/tuotelistaus?SearchTerm=*&PageSize=12&SortingAttribute=&PageNumber={str(pages)}&SearchParameter=%26%40QueryTerm%3D*%26ContextCategoryUUID%3D6Q7AqG5uhTIAAAFVOmkI2BYA%26OnlineFlag%3D1"
 
-    print("kaikkien tuotteiden url:")
+    print("url for all the products:")
     print(url)
 
     return url
@@ -58,9 +57,7 @@ def get_correct_url(driver: webdriver.Firefox) -> str:
 def get_data_from_html(doc):
     prod_data = doc.find_all(class_="product-data-container")
     price_data = doc.find_all(class_="js-price-container price-wrapper mc-price hide-for-list-view")
-
     print("prices found")
-
     product_prices = []
 
     for price in price_data:
@@ -69,7 +66,6 @@ def get_data_from_html(doc):
         new_price = price.split('"')[1].split(" €")[0]
 
         product_prices.extend(new_price)
-    # print(new_price)
 
     product_data = (data["data-product-data"] for data in prod_data)
     product_price = [i["content"] for i in price_data]
@@ -132,11 +128,11 @@ def make_dict_from_data(product_data, product_price):
 def print_alcohol_data(sorted_alcohol_dict):
     for key in sorted_alcohol_dict:
         try:
-            print(f"{key}: alkoholi % per litra per euro: {sorted_alcohol_dict[key][-1]}")
+            print(f"{key}: alkohol % per liter per euro: {sorted_alcohol_dict[key][-1]}")
         except Exception:
             pass
 
-    print(f"lopullinen tuotemäärä: {len(sorted_alcohol_dict)}")
+    print(f"final product count: {len(sorted_alcohol_dict)}")
     # print("prices ", len(product_price))
     # print("alcohol dict ", len(alcohol_dict))
     # print(len(product_prices))
@@ -144,10 +140,10 @@ def print_alcohol_data(sorted_alcohol_dict):
 
 def main():
     try:
-        driver = setup_webdriver(timeout_seconds=1800)
+        driver = setup_webdriver(timeout_seconds=3600)
         url = get_correct_url(driver)
         print("getting data from Alko, please wait...")
-        print("seriously, it might take over 20 minutes, there is a lot of HTML that we need to download")
+        print("seriously, it might take over 30 minutes, there is a lot of HTML that we need to download")
         doc = get_html_from_url(url, driver)
 
     except Exception as e:
@@ -156,9 +152,6 @@ def main():
         driver.quit()
 
     print("website parsed")
-
-    # print(doc.prettify())
-
     product_data, product_price = get_data_from_html(doc)
 
     sorted_alcohol_dict, dataframe = make_dict_from_data(product_data, product_price)
